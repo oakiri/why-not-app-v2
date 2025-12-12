@@ -1,6 +1,6 @@
 import React from 'react';
-import { Text, StyleSheet, Pressable, Alert } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import { Text, StyleSheet, Pressable, Alert } from 'react-native';
 import { signOut } from 'firebase/auth';
 import useAuth from '../../hooks/useAuth';
 import { auth } from '../../api/firebase';

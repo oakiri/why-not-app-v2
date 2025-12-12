@@ -1,6 +1,6 @@
 import React from 'react';
-import { View, Text, FlatList, StyleSheet, Pressable } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import { View, Text, FlatList, StyleSheet, Pressable } from 'react-native';
 import { colors, typography } from '../../theme/theme';
 import useCartStore from '../../store/cartStore';
 
