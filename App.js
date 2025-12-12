@@ -1,5 +1,1 @@
-import 'expo-router/entry';
-
-export default function App() {
-  return null;
-}
+export { default } from "expo-router/entry";
