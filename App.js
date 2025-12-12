@@ -4,7 +4,7 @@ import * as SplashScreen from 'expo-splash-screen';
 import { NavigationContainer } from '@react-navigation/native';
 import AppNavigator from './src/navigation/AppNavigator';
 import { useFonts } from 'expo-font';
-import { SafeAreaView } from 'react-native-safe-area-context';
+import { SafeAreaProvider, SafeAreaView } from 'react-native-safe-area-context';
 
 SplashScreen.preventAutoHideAsync().catch(() => {});
 
@@ -118,11 +118,15 @@ export default function App() {
     };
   }, [fontsLoaded]);
 
-  if (showSplash) return <SplashView useAnton={fontsLoaded} />;
-
   return (
-    <NavigationContainer>
-      <AppNavigator />
-    </NavigationContainer>
+    <SafeAreaProvider>
+      {showSplash ? (
+        <SplashView useAnton={fontsLoaded} />
+      ) : (
+        <NavigationContainer>
+          <AppNavigator />
+        </NavigationContainer>
+      )}
+    </SafeAreaProvider>
   );
 }
