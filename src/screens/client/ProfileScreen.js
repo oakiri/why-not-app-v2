@@ -1,5 +1,6 @@
 import React from 'react';
-import { View, Text, StyleSheet, Pressable, Alert } from 'react-native';
+import { Text, StyleSheet, Pressable, Alert } from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
 import { signOut } from 'firebase/auth';
 import useAuth from '../../hooks/useAuth';
 import { auth } from '../../api/firebase';
@@ -17,7 +18,7 @@ const ProfileScreen = () => {
   };
 
   return (
-    <View style={styles.container}>
+    <SafeAreaView style={styles.container}>
       <Text style={[styles.title, typography.title]}>Hola, amante de las burgers</Text>
       <Text style={[styles.subtitle, typography.subtitle]}>
         Usuario: {user?.email || 'Invitado'}
@@ -25,7 +26,7 @@ const ProfileScreen = () => {
       <Pressable style={styles.button} onPress={handleLogout}>
         <Text style={styles.buttonText}>Cerrar sesión</Text>
       </Pressable>
-    </View>
+    </SafeAreaView>
   );
 };
 
@@ -33,9 +34,9 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: colors.background,
+    paddingHorizontal: 16,
     alignItems: 'center',
     justifyContent: 'center',
-    paddingHorizontal: 16,
   },
   title: {
     color: colors.primary,

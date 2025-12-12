@@ -1,5 +1,6 @@
 import React from 'react';
 import { View, Text, StyleSheet, FlatList, Pressable } from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
 import { colors, typography } from '../../theme/theme';
 import useCartStore from '../../store/cartStore';
 
@@ -22,7 +23,7 @@ const CartScreen = () => {
   );
 
   return (
-    <View style={styles.container}>
+    <SafeAreaView style={styles.container}>
       <Text style={[styles.header, typography.title]}>Tu carrito</Text>
       {items.length === 0 ? (
         <Text style={styles.empty}>Aún no has agregado hamburguesas.</Text>
@@ -42,7 +43,7 @@ const CartScreen = () => {
           </View>
         </>
       )}
-    </View>
+    </SafeAreaView>
   );
 };
 
@@ -51,7 +52,6 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: colors.background,
     paddingHorizontal: 16,
-    paddingTop: 16,
   },
   header: {
     color: colors.primary,
