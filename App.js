@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { View, Image, ActivityIndicator } from 'react-native';
+import { View, Image, Text } from 'react-native';
 import * as SplashScreen from 'expo-splash-screen';
 import { NavigationContainer } from '@react-navigation/native';
 import AppNavigator from './src/navigation/AppNavigator';
@@ -9,7 +9,7 @@ SplashScreen.preventAutoHideAsync().catch(() => {
   // Si ya se ha llamado antes o falla, simplemente ignora el error
 });
 
-const Splash = () => (
+const Splash = ({ fontsLoaded }) => (
   <View
     style={{
       flex: 1,
@@ -26,6 +26,17 @@ const Splash = () => (
         resizeMode: 'contain',
       }}
     />
+    <Text
+      style={{
+        marginTop: 16,
+        fontSize: 16,
+        letterSpacing: 1,
+        color: '#111111',
+        fontFamily: fontsLoaded ? 'Anton' : undefined,
+      }}
+    >
+      CARGANDO...
+    </Text>
   </View>
 );
 
@@ -45,14 +56,14 @@ export default function App() {
           // ignorar errores al ocultar el splash
         }
         setAppReady(true);
-      }, 3000);
+      }, 5000);
 
       return () => clearTimeout(timeout);
     }
   }, [fontsLoaded]);
 
   if (!fontsLoaded || !appReady) {
-    return <Splash />;
+    return <Splash fontsLoaded={fontsLoaded} />;
   }
 
   return (
