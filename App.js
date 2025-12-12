@@ -5,7 +5,9 @@ export default function App() {
   return (
     <View style={styles.container}>
       <Text style={styles.title}>WHY NOT – APP ROOT</Text>
-      <Text style={styles.subtitle}>Si ves este texto, App.js se está renderizando bien.</Text>
+      <Text style={styles.subtitle}>
+        Si ves este texto, todo el arranque está funcionando correctamente.
+      </Text>
     </View>
   );
 }
@@ -13,7 +15,7 @@ export default function App() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#222222',
+    backgroundColor: '#222',
     alignItems: 'center',
     justifyContent: 'center',
     paddingHorizontal: 16,
