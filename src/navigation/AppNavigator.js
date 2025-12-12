@@ -1,32 +1,7 @@
 import React from 'react';
-import { ActivityIndicator, View } from 'react-native';
-import { createNativeStackNavigator } from '@react-navigation/native-stack';
-import AuthNavigator from './AuthNavigator';
 import ClientNavigator from './ClientNavigator';
-import useAuth from '../hooks/useAuth';
 
-const Stack = createNativeStackNavigator();
-
-const AppNavigator = () => {
-  const { user, loading } = useAuth();
-
-  if (loading) {
-    return (
-      <View style={{ flex: 1, alignItems: 'center', justifyContent: 'center', backgroundColor: '#0b0b0b' }}>
-        <ActivityIndicator size="large" color="#f9d648" />
-      </View>
-    );
-  }
-
-  return (
-    <Stack.Navigator screenOptions={{ headerShown: false }}>
-      {user ? (
-        <Stack.Screen name="Client" component={ClientNavigator} />
-      ) : (
-        <Stack.Screen name="Auth" component={AuthNavigator} />
-      )}
-    </Stack.Navigator>
-  );
-};
-
-export default AppNavigator;
+export default function AppNavigator() {
+  // Más adelante volveremos a meter aquí la lógica de roles y autenticación.
+  return <ClientNavigator />;
+}
