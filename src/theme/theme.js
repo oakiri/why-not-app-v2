@@ -1,9 +1,9 @@
 export const colors = {
-  background: '#111111',
-  card: '#1E1E1E',
-  primary: '#FFD600',
-  text: '#FFFFFF',
-  textMuted: '#CCCCCC',
+  background: '#FFFFFF',
+  card: '#F5F5F5',
+  primary: '#FFD600', // amarillo WHY NOT
+  text: '#111111',
+  textMuted: '#555555',
 };
 
 export const typography = {
