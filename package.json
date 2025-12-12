@@ -1,6 +1,6 @@
 {
   "name": "why-not-app-v2",
-  "main": "index.js",
+  "main": "expo-router/entry",
   "version": "1.0.0",
   "scripts": {
     "start": "expo start",
