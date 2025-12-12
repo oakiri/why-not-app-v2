@@ -3,7 +3,7 @@
     "name": "why-not-app-v2",
     "slug": "why-not-app-v2",
     "version": "1.0.0",
-    "entryPoint": "./App.js",
+    "entryPoint": "./index.js",
     "orientation": "portrait",
     "icon": "./assets/images/icon.png",
     "scheme": "whynotappv2",
