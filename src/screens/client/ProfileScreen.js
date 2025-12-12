@@ -3,6 +3,7 @@ import { View, Text, StyleSheet, Pressable, Alert } from 'react-native';
 import { signOut } from 'firebase/auth';
 import useAuth from '../../hooks/useAuth';
 import { auth } from '../../api/firebase';
+import { colors, typography } from '../../theme/theme';
 
 const ProfileScreen = () => {
   const { user } = useAuth();
@@ -17,8 +18,10 @@ const ProfileScreen = () => {
 
   return (
     <View style={styles.container}>
-      <Text style={styles.title}>Hola, amante de las burgers</Text>
-      <Text style={styles.subtitle}>Usuario: {user?.email || 'Invitado'}</Text>
+      <Text style={[styles.title, typography.title]}>Hola, amante de las burgers</Text>
+      <Text style={[styles.subtitle, typography.subtitle]}>
+        Usuario: {user?.email || 'Invitado'}
+      </Text>
       <Pressable style={styles.button} onPress={handleLogout}>
         <Text style={styles.buttonText}>Cerrar sesión</Text>
       </Pressable>
@@ -29,32 +32,29 @@ const ProfileScreen = () => {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#0b0b0b',
+    backgroundColor: colors.background,
     alignItems: 'center',
     justifyContent: 'center',
     paddingHorizontal: 16,
   },
   title: {
-    color: '#f9d648',
-    fontSize: 22,
-    fontWeight: '800',
+    color: colors.primary,
     marginBottom: 8,
     textAlign: 'center',
   },
   subtitle: {
-    color: '#d7d7d7',
-    fontSize: 16,
+    color: colors.textMuted,
     marginBottom: 20,
     textAlign: 'center',
   },
   button: {
-    backgroundColor: '#f9d648',
+    backgroundColor: colors.primary,
     paddingVertical: 12,
     paddingHorizontal: 24,
     borderRadius: 12,
   },
   buttonText: {
-    color: '#0b0b0b',
+    color: colors.background,
     fontSize: 16,
     fontWeight: '700',
   },

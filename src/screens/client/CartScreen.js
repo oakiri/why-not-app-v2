@@ -1,5 +1,6 @@
 import React from 'react';
 import { View, Text, StyleSheet, FlatList, Pressable } from 'react-native';
+import { colors, typography } from '../../theme/theme';
 import useCartStore from '../../store/cartStore';
 
 const CartScreen = () => {
@@ -10,7 +11,7 @@ const CartScreen = () => {
   const renderItem = ({ item }) => (
     <View style={styles.item}>
       <View>
-        <Text style={styles.itemName}>{item.name}</Text>
+        <Text style={[styles.itemName, typography.subtitle]}>{item.name}</Text>
         <Text style={styles.itemMeta}>{`Cantidad: ${item.quantity || 1}`}</Text>
         <Text style={styles.itemMeta}>{`$${(item.price || 0).toFixed(2)}`}</Text>
       </View>
@@ -22,7 +23,7 @@ const CartScreen = () => {
 
   return (
     <View style={styles.container}>
-      <Text style={styles.header}>Tu carrito</Text>
+      <Text style={[styles.header, typography.title]}>Tu carrito</Text>
       {items.length === 0 ? (
         <Text style={styles.empty}>Aún no has agregado hamburguesas.</Text>
       ) : (
@@ -48,18 +49,16 @@ const CartScreen = () => {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#0b0b0b',
+    backgroundColor: colors.background,
     paddingHorizontal: 16,
     paddingTop: 16,
   },
   header: {
-    color: '#f9d648',
-    fontSize: 22,
-    fontWeight: '700',
+    color: colors.primary,
     marginBottom: 12,
   },
   empty: {
-    color: '#d7d7d7',
+    color: colors.textMuted,
     fontSize: 16,
     marginTop: 20,
   },
@@ -68,23 +67,21 @@ const styles = StyleSheet.create({
     paddingBottom: 24,
   },
   item: {
-    backgroundColor: '#151515',
+    backgroundColor: colors.card,
     borderRadius: 12,
     padding: 16,
     borderWidth: 1,
-    borderColor: '#f9d648',
+    borderColor: colors.primary,
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
   },
   itemName: {
-    color: '#ffffff',
-    fontSize: 16,
-    fontWeight: '700',
+    color: colors.text,
     marginBottom: 4,
   },
   itemMeta: {
-    color: '#d7d7d7',
+    color: colors.textMuted,
     fontSize: 14,
   },
   removeButton: {
@@ -94,30 +91,30 @@ const styles = StyleSheet.create({
     borderRadius: 8,
   },
   removeText: {
-    color: '#ffffff',
+    color: colors.text,
     fontSize: 14,
     fontWeight: '700',
   },
   footer: {
     marginTop: 12,
     borderTopWidth: 1,
-    borderTopColor: '#2a2a2a',
+    borderTopColor: colors.card,
     paddingTop: 12,
   },
   total: {
-    color: '#f9d648',
+    color: colors.primary,
     fontSize: 18,
     fontWeight: '700',
     marginBottom: 8,
   },
   clearButton: {
-    backgroundColor: '#f9d648',
+    backgroundColor: colors.primary,
     paddingVertical: 10,
     borderRadius: 10,
     alignItems: 'center',
   },
   clearText: {
-    color: '#0b0b0b',
+    color: colors.background,
     fontSize: 16,
     fontWeight: '700',
   },
