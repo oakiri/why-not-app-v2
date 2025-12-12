@@ -1,208 +1,197 @@
 import React, { useState } from 'react';
-import {
-  View,
-  Text,
-  TextInput,
-  StyleSheet,
-  Pressable,
-  Alert,
-  KeyboardAvoidingView,
-  Platform,
-  ScrollView,
-  SafeAreaView,
-} from 'react-native';
+import { View, Text, TextInput, TouchableOpacity } from 'react-native';
+import { Ionicons } from '@expo/vector-icons';
 import { createUserWithEmailAndPassword } from 'firebase/auth';
-import { doc, setDoc } from 'firebase/firestore';
-import { useNavigation } from '@react-navigation/native';
+import { doc, serverTimestamp, setDoc } from 'firebase/firestore';
 import { auth, db } from '../../api/firebase';
+import AuthLayout from '../../components/auth/AuthLayout';
 import { colors, typography } from '../../theme/theme';
 
-const RegisterScreen = () => {
-  const navigation = useNavigation();
+export default function RegisterScreen() {
   const [name, setName] = useState('');
+  const [lastName, setLastName] = useState('');
+  const [phone, setPhone] = useState('');
+  const [address, setAddress] = useState('');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
+  const [showPassword, setShowPassword] = useState(false);
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
+  const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
 
   const handleRegister = async () => {
-    if (!name || !email || !password || !confirmPassword) {
-      Alert.alert('Completa los campos', 'Todos los campos son obligatorios.');
+    setError('');
+
+    if (!name || !lastName || !phone || !address || !email || !password || !confirmPassword) {
+      setError('Por favor, completa todos los campos.');
+      return;
+    }
+
+    if (!email.includes('@')) {
+      setError('Introduce un correo electrónico válido.');
+      return;
+    }
+
+    if (!/^\d{9,}$/.test(phone)) {
+      setError('El teléfono debe contener solo dígitos y tener al menos 9 números.');
+      return;
+    }
+
+    if (password.length < 8) {
+      setError('La contraseña debe tener al menos 8 caracteres.');
       return;
     }
 
     if (password !== confirmPassword) {
-      Alert.alert('Contraseñas distintas', 'Asegúrate de que las contraseñas coinciden.');
+      setError('Las contraseñas no coinciden.');
       return;
     }
 
+    setLoading(true);
     try {
-      setLoading(true);
       const { user } = await createUserWithEmailAndPassword(auth, email.trim(), password);
       await setDoc(doc(db, 'users', user.uid), {
         uid: user.uid,
-        email: user.email,
         name,
+        lastName,
+        phone,
+        address,
+        email,
         role: 'cliente',
+        createdAt: serverTimestamp(),
       });
-    } catch (error) {
-      Alert.alert('No pudimos registrarte', error.message);
+    } catch (e) {
+      setError('No pudimos crear tu cuenta. Revisa tus datos.');
     } finally {
       setLoading(false);
     }
   };
 
   return (
-    <SafeAreaView style={styles.safeArea}>
-      <KeyboardAvoidingView
-        style={styles.container}
-        behavior={Platform.OS === 'ios' ? 'padding' : undefined}
-      >
-        <ScrollView contentContainerStyle={styles.content} keyboardShouldPersistTaps="handled">
-          <Text style={[typography.title, styles.title]}>Crear cuenta</Text>
-          <Text style={styles.subtitle}>Regístrate para descubrir nuestras burgers</Text>
+    <AuthLayout>
+      <View style={{ width: '100%' }}>
+        <Text style={[{ marginBottom: 16, color: colors.text }, typography.title]}>
+          Crear cuenta
+        </Text>
 
-          <View style={styles.formGroup}>
-            <Text style={styles.label}>Nombre</Text>
-            <TextInput
-              style={styles.input}
-              placeholder="Tu nombre"
-              placeholderTextColor="#9a9a9a"
-              value={name}
-              onChangeText={setName}
-            />
-          </View>
+        {error ? (
+          <Text style={{ color: 'red', marginBottom: 8 }}>{error}</Text>
+        ) : null}
 
-          <View style={styles.formGroup}>
-            <Text style={styles.label}>Email</Text>
-            <TextInput
-              style={styles.input}
-              placeholder="tu@email.com"
-              placeholderTextColor="#9a9a9a"
-              keyboardType="email-address"
-              autoCapitalize="none"
-              value={email}
-              onChangeText={setEmail}
-            />
-          </View>
+        <TextInput
+          placeholder="Nombre"
+          placeholderTextColor="#999"
+          style={fieldStyle}
+          value={name}
+          onChangeText={setName}
+        />
 
-          <View style={styles.formGroup}>
-            <Text style={styles.label}>Contraseña</Text>
-            <TextInput
-              style={styles.input}
-              placeholder="********"
-              placeholderTextColor="#9a9a9a"
-              secureTextEntry
-              value={password}
-              onChangeText={setPassword}
-            />
-          </View>
+        <TextInput
+          placeholder="Apellidos"
+          placeholderTextColor="#999"
+          style={fieldStyle}
+          value={lastName}
+          onChangeText={setLastName}
+        />
 
-          <View style={styles.formGroup}>
-            <Text style={styles.label}>Confirmar contraseña</Text>
-            <TextInput
-              style={styles.input}
-              placeholder="********"
-              placeholderTextColor="#9a9a9a"
-              secureTextEntry
-              value={confirmPassword}
-              onChangeText={setConfirmPassword}
-            />
-          </View>
+        <TextInput
+          placeholder="Teléfono"
+          placeholderTextColor="#999"
+          keyboardType="phone-pad"
+          style={fieldStyle}
+          value={phone}
+          onChangeText={setPhone}
+        />
 
-          <Pressable
-            style={({ pressed }) => [styles.button, pressed && styles.buttonPressed, loading && styles.buttonDisabled]}
-            onPress={handleRegister}
-            disabled={loading}
-          >
-            <Text style={styles.buttonText}>{loading ? 'Creando cuenta...' : 'Registrarme'}</Text>
-          </Pressable>
+        <TextInput
+          placeholder="Dirección"
+          placeholderTextColor="#999"
+          style={fieldStyle}
+          value={address}
+          onChangeText={setAddress}
+        />
 
-          <Pressable onPress={() => navigation.navigate('Login')} style={styles.linkWrapper}>
-            <Text style={styles.link}>¿Ya tienes cuenta? Inicia sesión</Text>
-          </Pressable>
-        </ScrollView>
-      </KeyboardAvoidingView>
-    </SafeAreaView>
+        <TextInput
+          placeholder="Correo electrónico"
+          placeholderTextColor="#999"
+          autoCapitalize="none"
+          keyboardType="email-address"
+          style={fieldStyle}
+          value={email}
+          onChangeText={setEmail}
+        />
+
+        <View style={passwordContainerStyle}>
+          <TextInput
+            placeholder="Contraseña"
+            placeholderTextColor="#999"
+            secureTextEntry={!showPassword}
+            style={passwordInputStyle}
+            value={password}
+            onChangeText={setPassword}
+          />
+          <TouchableOpacity onPress={() => setShowPassword((prev) => !prev)}>
+            <Ionicons name={showPassword ? 'eye-off' : 'eye'} size={20} color="#888" />
+          </TouchableOpacity>
+        </View>
+
+        <View style={passwordContainerStyle}>
+          <TextInput
+            placeholder="Confirmar contraseña"
+            placeholderTextColor="#999"
+            secureTextEntry={!showConfirmPassword}
+            style={passwordInputStyle}
+            value={confirmPassword}
+            onChangeText={setConfirmPassword}
+          />
+          <TouchableOpacity onPress={() => setShowConfirmPassword((prev) => !prev)}>
+            <Ionicons name={showConfirmPassword ? 'eye-off' : 'eye'} size={20} color="#888" />
+          </TouchableOpacity>
+        </View>
+
+        <TouchableOpacity
+          onPress={handleRegister}
+          disabled={loading}
+          style={{
+            backgroundColor: colors.primary,
+            borderRadius: 999,
+            paddingVertical: 14,
+            alignItems: 'center',
+            marginTop: 4,
+          }}
+        >
+          <Text style={{ color: colors.text, fontWeight: 'bold' }}>
+            {loading ? 'Creando cuenta...' : 'Registrarme'}
+          </Text>
+        </TouchableOpacity>
+      </View>
+    </AuthLayout>
   );
+}
+
+const fieldStyle = {
+  borderWidth: 1,
+  borderColor: '#DDD',
+  borderRadius: 8,
+  paddingHorizontal: 12,
+  paddingVertical: 10,
+  marginBottom: 12,
+  color: colors.text,
 };
 
-const styles = StyleSheet.create({
-  safeArea: {
-    flex: 1,
-    backgroundColor: colors.background,
-  },
-  container: {
-    flex: 1,
-    backgroundColor: colors.background,
-  },
-  content: {
-    paddingHorizontal: 20,
-    paddingVertical: 40,
-  },
-  title: {
-    textAlign: 'center',
-    color: colors.text,
-  },
-  subtitle: {
-    color: colors.textMuted,
-    fontSize: 16,
-    marginTop: 8,
-    marginBottom: 32,
-    textAlign: 'center',
-  },
-  formGroup: {
-    marginBottom: 18,
-  },
-  label: {
-    color: colors.text,
-    marginBottom: 8,
-    fontWeight: '600',
-    letterSpacing: 0.5,
-  },
-  input: {
-    backgroundColor: '#f7f7f7',
-    color: colors.text,
-    borderRadius: 12,
-    paddingHorizontal: 14,
-    paddingVertical: 12,
-    borderWidth: 1,
-    borderColor: colors.primary,
-    fontSize: 15,
-  },
-  button: {
-    backgroundColor: colors.primary,
-    paddingVertical: 14,
-    borderRadius: 12,
-    alignItems: 'center',
-    marginTop: 8,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.1,
-    shadowRadius: 4,
-    elevation: 2,
-  },
-  buttonPressed: {
-    opacity: 0.9,
-  },
-  buttonDisabled: {
-    opacity: 0.7,
-  },
-  buttonText: {
-    color: '#0b0b0b',
-    fontSize: 16,
-    fontWeight: '800',
-    letterSpacing: 0.5,
-  },
-  linkWrapper: {
-    marginTop: 18,
-    alignItems: 'center',
-  },
-  link: {
-    color: colors.text,
-    fontWeight: '700',
-    textDecorationLine: 'underline',
-  },
-});
+const passwordContainerStyle = {
+  flexDirection: 'row',
+  alignItems: 'center',
+  borderWidth: 1,
+  borderColor: '#DDD',
+  borderRadius: 8,
+  paddingHorizontal: 12,
+  marginBottom: 12,
+};
 
-export default RegisterScreen;
+const passwordInputStyle = {
+  flex: 1,
+  paddingVertical: 10,
+  color: colors.text,
+};
