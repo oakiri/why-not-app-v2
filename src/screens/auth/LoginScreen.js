@@ -1,12 +1,13 @@
 import React, { useState } from 'react';
 import { View, Text, TextInput, TouchableOpacity } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
+import { router } from 'expo-router';
 import { signInWithEmailAndPassword } from 'firebase/auth';
 import { auth } from '../../api/firebase';
 import AuthLayout from '../../components/auth/AuthLayout';
 import { colors, typography } from '../../theme/theme';
 
-export default function LoginScreen({ navigation }) {
+export default function LoginScreen() {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
@@ -27,6 +28,10 @@ export default function LoginScreen({ navigation }) {
     } finally {
       setLoading(false);
     }
+  };
+
+  const goToRegister = () => {
+    router.push('/register');
   };
 
   return (
@@ -100,7 +105,7 @@ export default function LoginScreen({ navigation }) {
 
         <View style={{ flexDirection: 'row', justifyContent: 'center' }}>
           <Text style={{ color: colors.textMuted }}>¿No tienes cuenta?</Text>
-          <TouchableOpacity onPress={() => navigation.navigate('Register')}>
+          <TouchableOpacity onPress={goToRegister}>
             <Text
               style={{
                 color: colors.primary,
