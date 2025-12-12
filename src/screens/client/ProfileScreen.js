@@ -8,6 +8,7 @@ import { colors, typography } from '../../theme/theme';
 
 const ProfileScreen = () => {
   const { user } = useAuth();
+  const email = auth.currentUser?.email || user?.email || 'Invitado';
 
   const handleLogout = async () => {
     try {
@@ -20,9 +21,7 @@ const ProfileScreen = () => {
   return (
     <SafeAreaView style={styles.container}>
       <Text style={[styles.title, typography.title]}>Hola, amante de las burgers</Text>
-      <Text style={[styles.subtitle, typography.subtitle]}>
-        Usuario: {user?.email || 'Invitado'}
-      </Text>
+      <Text style={[styles.subtitle, typography.subtitle]}>Usuario: {email}</Text>
       <Pressable style={styles.button} onPress={handleLogout}>
         <Text style={styles.buttonText}>Cerrar sesión</Text>
       </Pressable>

@@ -9,10 +9,12 @@ import {
   KeyboardAvoidingView,
   Platform,
   ScrollView,
+  SafeAreaView,
 } from 'react-native';
 import { signInWithEmailAndPassword } from 'firebase/auth';
 import { useNavigation } from '@react-navigation/native';
 import { auth } from '../../api/firebase';
+import { colors, typography } from '../../theme/theme';
 
 const LoginScreen = () => {
   const navigation = useNavigation();
@@ -37,109 +39,132 @@ const LoginScreen = () => {
   };
 
   return (
-    <KeyboardAvoidingView
-      style={styles.container}
-      behavior={Platform.OS === 'ios' ? 'padding' : undefined}
-      keyboardVerticalOffset={64}
-    >
-      <ScrollView contentContainerStyle={styles.content} keyboardShouldPersistTaps="handled">
-        <Text style={styles.title}>Bienvenido de nuevo</Text>
-        <Text style={styles.subtitle}>Inicia sesión para seguir disfrutando de WHY NOT Burgers</Text>
+    <SafeAreaView style={styles.safeArea}>
+      <KeyboardAvoidingView
+        style={styles.container}
+        behavior={Platform.OS === 'ios' ? 'padding' : undefined}
+      >
+        <ScrollView contentContainerStyle={styles.content} keyboardShouldPersistTaps="handled">
+          <Text style={[typography.title, styles.title]}>Iniciar sesión</Text>
+          <Text style={styles.subtitle}>Accede al menú y a tu carrito favorito</Text>
 
-        <View style={styles.formGroup}>
-          <Text style={styles.label}>Email</Text>
-          <TextInput
-            style={styles.input}
-            placeholder="tu@email.com"
-            placeholderTextColor="#7a7a7a"
-            keyboardType="email-address"
-            autoCapitalize="none"
-            value={email}
-            onChangeText={setEmail}
-          />
-        </View>
+          <View style={styles.formGroup}>
+            <Text style={styles.label}>Email</Text>
+            <TextInput
+              style={styles.input}
+              placeholder="tu@email.com"
+              placeholderTextColor="#9a9a9a"
+              keyboardType="email-address"
+              autoCapitalize="none"
+              value={email}
+              onChangeText={setEmail}
+            />
+          </View>
 
-        <View style={styles.formGroup}>
-          <Text style={styles.label}>Contraseña</Text>
-          <TextInput
-            style={styles.input}
-            placeholder="********"
-            placeholderTextColor="#7a7a7a"
-            secureTextEntry
-            value={password}
-            onChangeText={setPassword}
-          />
-        </View>
+          <View style={styles.formGroup}>
+            <Text style={styles.label}>Contraseña</Text>
+            <TextInput
+              style={styles.input}
+              placeholder="********"
+              placeholderTextColor="#9a9a9a"
+              secureTextEntry
+              value={password}
+              onChangeText={setPassword}
+            />
+          </View>
 
-        <Pressable style={styles.button} onPress={handleLogin} disabled={loading}>
-          <Text style={styles.buttonText}>{loading ? 'Ingresando...' : 'Iniciar sesión'}</Text>
-        </Pressable>
+          <Pressable
+            style={({ pressed }) => [styles.button, pressed && styles.buttonPressed, loading && styles.buttonDisabled]}
+            onPress={handleLogin}
+            disabled={loading}
+          >
+            <Text style={styles.buttonText}>{loading ? 'Ingresando...' : 'Iniciar sesión'}</Text>
+          </Pressable>
 
-        <Pressable onPress={() => navigation.navigate('Register')}>
-          <Text style={styles.link}>¿Aún no tienes cuenta? Regístrate</Text>
-        </Pressable>
-      </ScrollView>
-    </KeyboardAvoidingView>
+          <Pressable onPress={() => navigation.navigate('Register')} style={styles.linkWrapper}>
+            <Text style={styles.link}>¿Aún no tienes cuenta? Regístrate</Text>
+          </Pressable>
+        </ScrollView>
+      </KeyboardAvoidingView>
+    </SafeAreaView>
   );
 };
 
 const styles = StyleSheet.create({
+  safeArea: {
+    flex: 1,
+    backgroundColor: colors.background,
+  },
   container: {
     flex: 1,
-    backgroundColor: '#0b0b0b',
+    backgroundColor: colors.background,
   },
   content: {
-    paddingHorizontal: 16,
-    paddingTop: 60,
-    paddingBottom: 24,
+    paddingHorizontal: 20,
+    paddingVertical: 40,
   },
   title: {
-    color: '#f9d648',
-    fontSize: 26,
-    fontWeight: '800',
-    marginBottom: 8,
     textAlign: 'center',
+    color: colors.text,
   },
   subtitle: {
-    color: '#d7d7d7',
+    color: colors.textMuted,
     fontSize: 16,
+    marginTop: 8,
     marginBottom: 32,
     textAlign: 'center',
   },
   formGroup: {
-    marginBottom: 16,
+    marginBottom: 18,
   },
   label: {
-    color: '#ffffff',
+    color: colors.text,
     marginBottom: 8,
     fontWeight: '600',
+    letterSpacing: 0.5,
   },
   input: {
-    backgroundColor: '#151515',
-    color: '#ffffff',
+    backgroundColor: '#f7f7f7',
+    color: colors.text,
     borderRadius: 12,
     paddingHorizontal: 14,
     paddingVertical: 12,
     borderWidth: 1,
-    borderColor: '#f9d648',
+    borderColor: colors.primary,
+    fontSize: 15,
   },
   button: {
-    backgroundColor: '#f9d648',
+    backgroundColor: colors.primary,
     paddingVertical: 14,
     borderRadius: 12,
     alignItems: 'center',
     marginTop: 8,
-    marginBottom: 16,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 4,
+    elevation: 2,
+  },
+  buttonPressed: {
+    opacity: 0.9,
+  },
+  buttonDisabled: {
+    opacity: 0.7,
   },
   buttonText: {
     color: '#0b0b0b',
     fontSize: 16,
     fontWeight: '800',
+    letterSpacing: 0.5,
+  },
+  linkWrapper: {
+    marginTop: 18,
+    alignItems: 'center',
   },
   link: {
-    color: '#f9d648',
-    textAlign: 'center',
+    color: colors.text,
     fontWeight: '700',
+    textDecorationLine: 'underline',
   },
 });
 
