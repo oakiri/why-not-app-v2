@@ -1,42 +1,56 @@
 import React, { useEffect, useRef, useState } from 'react';
-import { View, Image, Text } from 'react-native';
+import { Image, Text, useWindowDimensions, View } from 'react-native';
 import * as SplashScreen from 'expo-splash-screen';
 import { NavigationContainer } from '@react-navigation/native';
 import AppNavigator from './src/navigation/AppNavigator';
 import { useFonts } from 'expo-font';
+import { SafeAreaView } from 'react-native-safe-area-context';
 
 SplashScreen.preventAutoHideAsync().catch(() => {});
 
-const SplashView = ({ useAnton }) => (
-  <View
-    style={{
-      flex: 1,
-      backgroundColor: '#FFFFFF',
-      alignItems: 'center',
-      justifyContent: 'center',
-    }}
-  >
-    <Image
-      source={require('./assets/logo.png')}
-      resizeMode="contain"
+const splashStartTime = Date.now();
+
+const SplashView = ({ useAnton }) => {
+  const { width } = useWindowDimensions();
+  const logoSize = Math.min(220, width * 0.55);
+
+  return (
+    <SafeAreaView
       style={{
-        width: 200,
-        height: 200,
-      }}
-    />
-    <Text
-      style={{
-        marginTop: 16,
-        fontSize: 16,
-        letterSpacing: 1,
-        color: '#111111',
-        ...(useAnton ? { fontFamily: 'Anton' } : null),
+        flex: 1,
+        backgroundColor: '#FFFFFF',
       }}
     >
-      CARGANDO...
-    </Text>
-  </View>
-);
+      <View
+        style={{
+          flex: 1,
+          alignItems: 'center',
+          justifyContent: 'center',
+        }}
+      >
+        <Image
+          source={require('./assets/logo.png')}
+          resizeMode="contain"
+          style={{
+            width: logoSize,
+            height: logoSize,
+          }}
+        />
+        <Text
+          style={{
+            marginTop: 18,
+            fontSize: 16,
+            letterSpacing: 0.8,
+            color: '#111111',
+            ...(useAnton ? { fontFamily: 'Anton' } : null),
+          }}
+        >
+          CARGANDO...
+        </Text>
+      </View>
+    </SafeAreaView>
+  );
+};
 
 export default function App() {
   const [fontsLoaded] = useFonts({
@@ -52,15 +66,25 @@ export default function App() {
 
     let isMounted = true;
 
-    const waitForFonts = async () => {
-      const start = Date.now();
-      while (!fontsLoaded && Date.now() - start < 2000) {
-        await new Promise((resolve) => setTimeout(resolve, 50));
-      }
-    };
+    const waitForFonts = () =>
+      new Promise((resolve) => {
+        const start = Date.now();
+        const check = () => {
+          if (fontsLoaded || Date.now() - start >= 2000) {
+            resolve();
+            return;
+          }
+          setTimeout(check, 50);
+        };
+        check();
+      });
 
     const run = async () => {
-      await Promise.all([waitForFonts(), new Promise((resolve) => setTimeout(resolve, 5000))]);
+      await waitForFonts();
+
+      const elapsed = Date.now() - splashStartTime;
+      const remaining = Math.max(0, 5000 - elapsed);
+      await new Promise((resolve) => setTimeout(resolve, remaining));
 
       if (!isMounted) return;
 
@@ -68,6 +92,7 @@ export default function App() {
         await SplashScreen.hideAsync();
       } catch (e) {}
 
+      if (!isMounted) return;
       setShowSplash(false);
     };
 
