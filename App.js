@@ -5,9 +5,7 @@ import { NavigationContainer } from '@react-navigation/native';
 import AppNavigator from './src/navigation/AppNavigator';
 import { useFonts } from 'expo-font';
 
-SplashScreen.preventAutoHideAsync().catch(() => {
-  // Si ya se ha llamado antes o falla, simplemente ignora el error
-});
+SplashScreen.preventAutoHideAsync().catch(() => {});
 
 const SplashView = ({ useAnton }) => (
   <View
@@ -52,13 +50,19 @@ export default function App() {
     if (hasInitialized.current) return;
     hasInitialized.current = true;
 
-    const run = async () => {
+    let isMounted = true;
+
+    const waitForFonts = async () => {
       const start = Date.now();
       while (!fontsLoaded && Date.now() - start < 2000) {
-        await new Promise((r) => setTimeout(r, 50));
+        await new Promise((resolve) => setTimeout(resolve, 50));
       }
+    };
 
-      await new Promise((r) => setTimeout(r, 5000));
+    const run = async () => {
+      await Promise.all([waitForFonts(), new Promise((resolve) => setTimeout(resolve, 5000))]);
+
+      if (!isMounted) return;
 
       try {
         await SplashScreen.hideAsync();
@@ -68,6 +72,10 @@ export default function App() {
     };
 
     run();
+
+    return () => {
+      isMounted = false;
+    };
   }, [fontsLoaded]);
 
   if (showSplash) return <SplashView useAnton={fontsLoaded} />;
