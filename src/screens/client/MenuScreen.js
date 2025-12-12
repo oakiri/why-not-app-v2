@@ -1,5 +1,6 @@
 import React from 'react';
 import { View, Text, FlatList, StyleSheet, Pressable } from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
 import { colors, typography } from '../../theme/theme';
 import useCartStore from '../../store/cartStore';
 
@@ -26,7 +27,7 @@ const MenuScreen = () => {
   );
 
   return (
-    <View style={styles.container}>
+    <SafeAreaView style={styles.container}>
       <Text style={[styles.header, typography.title]}>Hamburguesas destacadas</Text>
       <FlatList
         data={PRODUCTS}
@@ -34,7 +35,7 @@ const MenuScreen = () => {
         renderItem={renderItem}
         contentContainerStyle={styles.list}
       />
-    </View>
+    </SafeAreaView>
   );
 };
 
@@ -43,7 +44,6 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: colors.background,
     paddingHorizontal: 16,
-    paddingTop: 16,
   },
   header: {
     color: colors.primary,
