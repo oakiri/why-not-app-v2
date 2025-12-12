@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import { View, Image, Text } from 'react-native';
 import * as SplashScreen from 'expo-splash-screen';
 import { NavigationContainer } from '@react-navigation/native';
@@ -9,7 +9,7 @@ SplashScreen.preventAutoHideAsync().catch(() => {
   // Si ya se ha llamado antes o falla, simplemente ignora el error
 });
 
-const Splash = ({ fontsLoaded }) => (
+const SplashView = ({ useAnton }) => (
   <View
     style={{
       flex: 1,
@@ -20,10 +20,10 @@ const Splash = ({ fontsLoaded }) => (
   >
     <Image
       source={require('./assets/logo.png')}
+      resizeMode="contain"
       style={{
         width: 200,
         height: 200,
-        resizeMode: 'contain',
       }}
     />
     <Text
@@ -32,7 +32,7 @@ const Splash = ({ fontsLoaded }) => (
         fontSize: 16,
         letterSpacing: 1,
         color: '#111111',
-        fontFamily: fontsLoaded ? 'Anton' : undefined,
+        ...(useAnton ? { fontFamily: 'Anton' } : null),
       }}
     >
       CARGANDO...
@@ -45,26 +45,32 @@ export default function App() {
     Anton: require('./assets/fonts/Anton-Regular.ttf'),
   });
 
-  const [appReady, setAppReady] = useState(false);
+  const [showSplash, setShowSplash] = useState(true);
+  const hasInitialized = useRef(false);
 
   useEffect(() => {
-    if (fontsLoaded) {
-      const timeout = setTimeout(async () => {
-        try {
-          await SplashScreen.hideAsync();
-        } catch (e) {
-          // ignorar errores al ocultar el splash
-        }
-        setAppReady(true);
-      }, 5000);
+    if (hasInitialized.current) return;
+    hasInitialized.current = true;
 
-      return () => clearTimeout(timeout);
-    }
+    const run = async () => {
+      const start = Date.now();
+      while (!fontsLoaded && Date.now() - start < 2000) {
+        await new Promise((r) => setTimeout(r, 50));
+      }
+
+      await new Promise((r) => setTimeout(r, 5000));
+
+      try {
+        await SplashScreen.hideAsync();
+      } catch (e) {}
+
+      setShowSplash(false);
+    };
+
+    run();
   }, [fontsLoaded]);
 
-  if (!fontsLoaded || !appReady) {
-    return <Splash fontsLoaded={fontsLoaded} />;
-  }
+  if (showSplash) return <SplashView useAnton={fontsLoaded} />;
 
   return (
     <NavigationContainer>
