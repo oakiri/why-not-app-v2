@@ -1,5 +1,6 @@
 import React from 'react';
 import { View, Text, FlatList, StyleSheet, Pressable } from 'react-native';
+import { colors, typography } from '../../theme/theme';
 import useCartStore from '../../store/cartStore';
 
 const PRODUCTS = [
@@ -14,7 +15,7 @@ const MenuScreen = () => {
   const renderItem = ({ item }) => (
     <View style={styles.card}>
       <View style={styles.textContainer}>
-        <Text style={styles.title}>{item.name}</Text>
+        <Text style={[styles.title, typography.title]}>{item.name}</Text>
         <Text style={styles.description}>{item.description}</Text>
         <Text style={styles.price}>{`$${item.price.toFixed(2)}`}</Text>
       </View>
@@ -26,7 +27,7 @@ const MenuScreen = () => {
 
   return (
     <View style={styles.container}>
-      <Text style={styles.header}>Hamburguesas destacadas</Text>
+      <Text style={[styles.header, typography.title]}>Hamburguesas destacadas</Text>
       <FlatList
         data={PRODUCTS}
         keyExtractor={(item) => item.id}
@@ -40,14 +41,12 @@ const MenuScreen = () => {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#0b0b0b',
+    backgroundColor: colors.background,
     paddingHorizontal: 16,
     paddingTop: 16,
   },
   header: {
-    color: '#f9d648',
-    fontSize: 22,
-    fontWeight: '700',
+    color: colors.primary,
     marginBottom: 12,
   },
   list: {
@@ -55,39 +54,37 @@ const styles = StyleSheet.create({
     paddingBottom: 24,
   },
   card: {
-    backgroundColor: '#151515',
+    backgroundColor: colors.card,
     borderRadius: 12,
     padding: 16,
     borderWidth: 1,
-    borderColor: '#f9d648',
+    borderColor: colors.primary,
   },
   textContainer: {
     marginBottom: 12,
   },
   title: {
-    color: '#ffffff',
-    fontSize: 18,
-    fontWeight: '700',
+    color: colors.text,
     marginBottom: 4,
   },
   description: {
-    color: '#d7d7d7',
+    color: colors.textMuted,
     fontSize: 14,
     marginBottom: 8,
   },
   price: {
-    color: '#f9d648',
+    color: colors.primary,
     fontSize: 16,
     fontWeight: '600',
   },
   button: {
-    backgroundColor: '#f9d648',
+    backgroundColor: colors.primary,
     paddingVertical: 10,
     borderRadius: 10,
     alignItems: 'center',
   },
   buttonText: {
-    color: '#0b0b0b',
+    color: colors.background,
     fontSize: 16,
     fontWeight: '700',
   },
