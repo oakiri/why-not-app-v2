@@ -1,15 +1,24 @@
 import React from 'react';
 import { View, Text, StyleSheet, Pressable, Alert } from 'react-native';
+import { signOut } from 'firebase/auth';
+import useAuth from '../../hooks/useAuth';
+import { auth } from '../../api/firebase';
 
 const ProfileScreen = () => {
-  const handleLogout = () => {
-    Alert.alert('Cerrar sesión', 'Por ahora este botón solo muestra un mensaje.');
+  const { user } = useAuth();
+
+  const handleLogout = async () => {
+    try {
+      await signOut(auth);
+    } catch (error) {
+      Alert.alert('Error al cerrar sesión', error.message);
+    }
   };
 
   return (
     <View style={styles.container}>
       <Text style={styles.title}>Hola, amante de las burgers</Text>
-      <Text style={styles.subtitle}>Usuario: whynot.customer</Text>
+      <Text style={styles.subtitle}>Usuario: {user?.email || 'Invitado'}</Text>
       <Pressable style={styles.button} onPress={handleLogout}>
         <Text style={styles.buttonText}>Cerrar sesión</Text>
       </Pressable>
