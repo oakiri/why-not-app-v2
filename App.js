@@ -10,6 +10,9 @@ SplashScreen.preventAutoHideAsync().catch(() => {});
 
 const splashStartTime = Date.now();
 
+const splashMinDuration = 5000;
+const fontWaitLimit = 2000;
+
 const SplashView = ({ useAnton }) => {
   const { width } = useWindowDimensions();
   const logoSize = Math.min(220, width * 0.55);
@@ -59,6 +62,11 @@ export default function App() {
 
   const [showSplash, setShowSplash] = useState(true);
   const hasInitialized = useRef(false);
+  const fontsReadyRef = useRef(fontsLoaded);
+
+  useEffect(() => {
+    fontsReadyRef.current = fontsLoaded;
+  }, [fontsLoaded]);
 
   useEffect(() => {
     if (hasInitialized.current) return;
@@ -68,14 +76,21 @@ export default function App() {
 
     const waitForFonts = () =>
       new Promise((resolve) => {
+        if (fontsReadyRef.current) {
+          resolve();
+          return;
+        }
+
         const start = Date.now();
+
         const check = () => {
-          if (fontsLoaded || Date.now() - start >= 2000) {
+          if (fontsReadyRef.current || Date.now() - start >= fontWaitLimit) {
             resolve();
             return;
           }
           setTimeout(check, 50);
         };
+
         check();
       });
 
@@ -83,7 +98,7 @@ export default function App() {
       await waitForFonts();
 
       const elapsed = Date.now() - splashStartTime;
-      const remaining = Math.max(0, 5000 - elapsed);
+      const remaining = Math.max(0, splashMinDuration - elapsed);
       await new Promise((resolve) => setTimeout(resolve, remaining));
 
       if (!isMounted) return;
