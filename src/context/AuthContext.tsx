@@ -13,6 +13,16 @@ export type PendingProfile = {
 };
 
 export const PENDING_PROFILE_KEY = 'pendingProfile';
+export const getPendingProfileKey = (uid: string) => `${PENDING_PROFILE_KEY}:${uid}`;
+
+export const clearPendingProfileForUid = async (uid?: string) => {
+  const keys = [PENDING_PROFILE_KEY]; // Cleanup legacy global key to avoid leaking across accounts.
+  if (uid) {
+    keys.push(getPendingProfileKey(uid));
+  }
+
+  await AsyncStorage.multiRemove(keys);
+};
 
 type AuthContextValue = {
   user: User | null;
@@ -29,6 +39,11 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [initializing, setInitializing] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
   const [syncingProfile, setSyncingProfile] = useState(false);
+
+  useEffect(() => {
+    // Remove legacy global pending profile key so data is always scoped by UID.
+    AsyncStorage.removeItem(PENDING_PROFILE_KEY).catch(() => undefined);
+  }, []);
 
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, (currentUser) => {
@@ -57,7 +72,9 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
       setSyncingProfile(true);
       try {
-        const pendingRaw = await AsyncStorage.getItem(PENDING_PROFILE_KEY);
+        const scopedKey = getPendingProfileKey(user.uid);
+        // Scope pending profile to the authenticated UID to prevent leaking data between accounts.
+        const pendingRaw = await AsyncStorage.getItem(scopedKey);
         const pending: PendingProfile | null = pendingRaw ? JSON.parse(pendingRaw) : null;
         const userRef = doc(db, 'users', user.uid);
         const existing = await getDoc(userRef);
@@ -80,9 +97,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
         await setDoc(userRef, profileData, { merge: true });
 
-        if (pendingRaw) {
-          await AsyncStorage.removeItem(PENDING_PROFILE_KEY);
-        }
+        await clearPendingProfileForUid(user.uid);
       } catch (error) {
         console.warn('No se pudo sincronizar el perfil del usuario', error);
       } finally {

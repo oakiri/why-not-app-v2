@@ -6,6 +6,7 @@ import { signInWithEmailAndPassword } from 'firebase/auth';
 import { auth } from '../../lib/firebase';
 import AuthLayout from '../../components/auth/AuthLayout';
 import { colors, typography } from '../../theme/theme';
+import { mapAuthErrorMessage } from '../../utils/authErrorMessages';
 
 export default function LoginScreen() {
   const [email, setEmail] = useState('');
@@ -35,7 +36,7 @@ export default function LoginScreen() {
 
       router.replace('/home');
     } catch (e) {
-      setError('No se ha podido iniciar sesión. Revisa tus datos.');
+      setError(mapAuthErrorMessage(e));
     } finally {
       setLoading(false);
     }
@@ -43,6 +44,10 @@ export default function LoginScreen() {
 
   const goToRegister = () => {
     router.push('/register');
+  };
+
+  const goToForgotPassword = () => {
+    router.push('/forgot-password');
   };
 
   return (
@@ -100,6 +105,10 @@ export default function LoginScreen() {
             <Ionicons name={showPassword ? 'eye-off' : 'eye'} size={20} color="#888" />
           </TouchableOpacity>
         </View>
+
+        <TouchableOpacity onPress={goToForgotPassword} style={{ marginBottom: 16 }}>
+          <Text style={{ color: colors.primary, fontWeight: 'bold' }}>¿Olvidaste tu contraseña?</Text>
+        </TouchableOpacity>
 
         <TouchableOpacity
           onPress={handleLogin}

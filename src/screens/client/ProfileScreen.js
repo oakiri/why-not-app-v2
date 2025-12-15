@@ -4,6 +4,7 @@ import { Text, StyleSheet, Pressable, Alert } from 'react-native';
 import { signOut } from 'firebase/auth';
 import useAuth from '../../hooks/useAuth';
 import { auth } from '../../lib/firebase';
+import { clearPendingProfileForUid } from '../../context/AuthContext';
 import { colors, typography } from '../../theme/theme';
 
 const ProfileScreen = () => {
@@ -12,6 +13,7 @@ const ProfileScreen = () => {
 
   const handleLogout = async () => {
     try {
+      await clearPendingProfileForUid(user?.uid);
       await signOut(auth);
     } catch (error) {
       Alert.alert('Error al cerrar sesión', error.message);
