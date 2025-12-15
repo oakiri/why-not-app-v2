@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { View, Text, TextInput, TouchableOpacity } from 'react-native';
+import { View, Text, TextInput, TouchableOpacity, ActivityIndicator } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { router } from 'expo-router';
 import { signInWithEmailAndPassword } from 'firebase/auth';
@@ -24,16 +24,19 @@ export default function LoginScreen() {
       setError('Por favor, introduce tu correo y contraseña.');
       return;
     }
+
     setLoading(true);
     try {
       const { user } = await signInWithEmailAndPassword(auth, email.trim(), password);
 
+      // Si no está verificado, lo mandamos a la pantalla de verificación
       if (!user.emailVerified) {
         setInfo('Tu correo aún no está verificado. Revisa tu bandeja de entrada.');
         router.replace('/verify-email');
         return;
       }
 
+      // Si está verificado, entramos
       router.replace('/home');
     } catch (e) {
       setError(mapAuthErrorMessage(e));
@@ -43,10 +46,12 @@ export default function LoginScreen() {
   };
 
   const goToRegister = () => {
+    console.log('[AUTH] goToRegister -> /register');
     router.push('/register');
   };
 
   const goToForgotPassword = () => {
+    console.log('[AUTH] goToForgotPassword -> /forgot-password');
     router.push('/forgot-password');
   };
 
@@ -57,12 +62,8 @@ export default function LoginScreen() {
           Iniciar sesión
         </Text>
 
-        {error ? (
-          <Text style={{ color: 'red', marginBottom: 8 }}>{error}</Text>
-        ) : null}
-        {info ? (
-          <Text style={{ color: 'green', marginBottom: 8 }}>{info}</Text>
-        ) : null}
+        {error ? <Text style={{ color: 'red', marginBottom: 8 }}>{error}</Text> : null}
+        {info ? <Text style={{ color: 'green', marginBottom: 8 }}>{info}</Text> : null}
 
         <TextInput
           placeholder="Correo electrónico"
@@ -90,7 +91,7 @@ export default function LoginScreen() {
             borderColor: '#DDD',
             borderRadius: 8,
             paddingHorizontal: 12,
-            marginBottom: 16,
+            marginBottom: 10,
           }}
         >
           <TextInput
@@ -107,7 +108,9 @@ export default function LoginScreen() {
         </View>
 
         <TouchableOpacity onPress={goToForgotPassword} style={{ marginBottom: 16 }}>
-          <Text style={{ color: colors.primary, fontWeight: 'bold' }}>¿Olvidaste tu contraseña?</Text>
+          <Text style={{ color: colors.primary, fontWeight: 'bold' }}>
+            ¿Olvidaste tu contraseña?
+          </Text>
         </TouchableOpacity>
 
         <TouchableOpacity
@@ -119,8 +122,13 @@ export default function LoginScreen() {
             paddingVertical: 14,
             alignItems: 'center',
             marginBottom: 16,
+            opacity: loading ? 0.8 : 1,
+            flexDirection: 'row',
+            justifyContent: 'center',
+            gap: 10,
           }}
         >
+          {loading ? <ActivityIndicator /> : null}
           <Text style={{ color: colors.text, fontWeight: 'bold' }}>
             {loading ? 'Entrando...' : 'Iniciar sesión'}
           </Text>
