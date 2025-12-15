@@ -1,35 +1,33 @@
-import { useEffect, useRef, useState } from "react";
-import { Image, StyleSheet, Text, View, useWindowDimensions } from "react-native";
-import { Stack } from "expo-router";
-import * as SplashScreen from "expo-splash-screen";
-import { SafeAreaProvider } from "react-native-safe-area-context";
-import { useFonts } from "expo-font";
+import { useEffect, useRef, useState } from 'react';
+import { Image, StyleSheet, Text, View, useWindowDimensions } from 'react-native';
+import { Stack } from 'expo-router';
+import * as SplashScreen from 'expo-splash-screen';
+import { SafeAreaProvider } from 'react-native-safe-area-context';
+import { useFonts } from 'expo-font';
 
-const SPLASH_DURATION_MS = 5000;
+// ⏱️ Splash duration by environment
+const SPLASH_DURATION =
+  process.env.NODE_ENV === 'development' ? 1000 : 3000;
 
-// Evita llamadas duplicadas a preventAutoHideAsync (Fast Refresh / Web HMR / re-evaluaciones)
-declare global {
-  // eslint-disable-next-line no-var
-  var __WHY_NOT_SPLASH_PREVENTED__: boolean | undefined;
-}
-
-if (!globalThis.__WHY_NOT_SPLASH_PREVENTED__) {
-  globalThis.__WHY_NOT_SPLASH_PREVENTED__ = true;
+// Prevent auto-hide ONCE
+let splashPrevented = false;
+if (!splashPrevented) {
+  splashPrevented = true;
   SplashScreen.preventAutoHideAsync().catch(() => {});
 }
 
 function SplashOverlay({ useAnton }: { useAnton: boolean }) {
   const { width } = useWindowDimensions();
-  const logoSize = Math.min(240, width * 0.55);
+  const logoSize = Math.min(220, width * 0.55);
 
   return (
     <View style={styles.splashContainer} pointerEvents="none">
       <Image
-        source={require("../assets/logo.png")}
+        source={require('../assets/logo.png')}
         resizeMode="contain"
         style={{ width: logoSize, height: logoSize }}
       />
-      <Text style={[styles.splashText, useAnton ? { fontFamily: "Anton" } : null]}>
+      <Text style={[styles.splashText, useAnton && { fontFamily: 'Anton' }]}>
         CARGANDO...
       </Text>
     </View>
@@ -38,36 +36,31 @@ function SplashOverlay({ useAnton }: { useAnton: boolean }) {
 
 export default function RootLayout() {
   const [fontsLoaded] = useFonts({
-    Anton: require("../assets/fonts/Anton-Regular.ttf"),
+    Anton: require('../assets/fonts/Anton-Regular.ttf'),
   });
 
   const [showOverlay, setShowOverlay] = useState(true);
-  const hasHiddenNativeSplash = useRef(false);
+  const hasHiddenSplash = useRef(false);
 
   useEffect(() => {
-    const t = setTimeout(async () => {
-      // 1) Quitamos el overlay
+    const timer = setTimeout(async () => {
+      if (hasHiddenSplash.current) return;
+      hasHiddenSplash.current = true;
+
       setShowOverlay(false);
+      try {
+        await SplashScreen.hideAsync();
+      } catch {}
+    }, SPLASH_DURATION);
 
-      // 2) Ocultamos el splash nativo UNA sola vez
-      if (!hasHiddenNativeSplash.current) {
-        hasHiddenNativeSplash.current = true;
-        try {
-          await SplashScreen.hideAsync();
-        } catch {
-          // ignore
-        }
-      }
-    }, SPLASH_DURATION_MS);
-
-    return () => clearTimeout(t);
+    return () => clearTimeout(timer);
   }, []);
 
   return (
     <SafeAreaProvider>
       <View style={styles.root}>
         <Stack screenOptions={{ headerShown: false }} />
-        {showOverlay ? <SplashOverlay useAnton={fontsLoaded} /> : null}
+        {showOverlay && <SplashOverlay useAnton={fontsLoaded} />}
       </View>
     </SafeAreaProvider>
   );
@@ -76,18 +69,18 @@ export default function RootLayout() {
 const styles = StyleSheet.create({
   root: {
     flex: 1,
-    backgroundColor: "#FFFFFF",
+    backgroundColor: '#FFFFFF',
   },
   splashContainer: {
     ...StyleSheet.absoluteFillObject,
-    backgroundColor: "#FFFFFF",
-    alignItems: "center",
-    justifyContent: "center",
+    alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: '#FFFFFF',
   },
   splashText: {
     marginTop: 18,
     fontSize: 16,
     letterSpacing: 0.8,
-    color: "#111111",
+    color: '#111111',
   },
 });
