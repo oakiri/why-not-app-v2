@@ -1,9 +1,10 @@
-import { useEffect, useRef, useState } from "react";
+import React, { useEffect, useRef, useState } from "react";
 import { Image, StyleSheet, Text, View, useWindowDimensions } from "react-native";
-import { Stack } from "expo-router";
+import { Stack, usePathname, useRouter } from "expo-router";
 import * as SplashScreen from "expo-splash-screen";
 import { SafeAreaProvider } from "react-native-safe-area-context";
 import { useFonts } from "expo-font";
+import { AuthProvider, useAuth } from "../src/context/AuthContext";
 
 const SPLASH_DURATION_MS = 5000;
 
@@ -36,6 +37,43 @@ function SplashOverlay({ useAnton }: { useAnton: boolean }) {
   );
 }
 
+function AuthGate({ children }: { children: React.ReactNode }) {
+  const { user, initializing } = useAuth();
+  const router = useRouter();
+  const pathname = usePathname();
+
+  useEffect(() => {
+    if (initializing) return;
+
+    const isAuthRoute = pathname === "/login" || pathname === "/register";
+    const isVerifyRoute = pathname === "/verify-email";
+
+    if (!user) {
+      if (!isAuthRoute) {
+        router.replace("/login");
+      }
+      return;
+    }
+
+    if (!user.emailVerified) {
+      if (!isVerifyRoute) {
+        router.replace("/verify-email");
+      }
+      return;
+    }
+
+    if (isAuthRoute || isVerifyRoute) {
+      router.replace("/home");
+    }
+  }, [user, initializing, pathname, router]);
+
+  if (initializing) {
+    return null;
+  }
+
+  return <>{children}</>;
+}
+
 export default function RootLayout() {
   const [fontsLoaded] = useFonts({
     Anton: require("../assets/fonts/Anton-Regular.ttf"),
@@ -65,10 +103,14 @@ export default function RootLayout() {
 
   return (
     <SafeAreaProvider>
-      <View style={styles.root}>
-        <Stack screenOptions={{ headerShown: false }} />
-        {showOverlay ? <SplashOverlay useAnton={fontsLoaded} /> : null}
-      </View>
+      <AuthProvider>
+        <View style={styles.root}>
+          <AuthGate>
+            <Stack screenOptions={{ headerShown: false }} />
+          </AuthGate>
+          {showOverlay ? <SplashOverlay useAnton={fontsLoaded} /> : null}
+        </View>
+      </AuthProvider>
     </SafeAreaProvider>
   );
 }
