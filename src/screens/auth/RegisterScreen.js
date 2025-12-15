@@ -5,9 +5,10 @@ import { Ionicons } from '@expo/vector-icons';
 import { router } from 'expo-router';
 import { createUserWithEmailAndPassword, sendEmailVerification } from 'firebase/auth';
 import { auth } from '../../lib/firebase';
-import { PENDING_PROFILE_KEY } from '../../context/AuthContext';
+import { getPendingProfileKey } from '../../context/AuthContext';
 import AuthLayout from '../../components/auth/AuthLayout';
 import { colors, typography } from '../../theme/theme';
+import { mapAuthErrorMessage } from '../../utils/authErrorMessages';
 
 export default function RegisterScreen() {
   const [nombre, setNombre] = useState('');
@@ -62,11 +63,11 @@ export default function RegisterScreen() {
         email: email.trim(),
       };
 
-      await AsyncStorage.setItem(PENDING_PROFILE_KEY, JSON.stringify(pendingProfile));
+      await AsyncStorage.setItem(getPendingProfileKey(user.uid), JSON.stringify(pendingProfile));
       await sendEmailVerification(user);
       router.replace('/verify-email');
     } catch (e) {
-      setError('No pudimos crear tu cuenta. Revisa tus datos.');
+      setError(mapAuthErrorMessage(e));
     } finally {
       setLoading(false);
     }

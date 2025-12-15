@@ -5,7 +5,7 @@ import { router } from 'expo-router';
 import { sendEmailVerification, signOut } from 'firebase/auth';
 import { colors } from '../src/theme/theme';
 import { auth } from '../src/lib/firebase';
-import { useAuth } from '../src/context/AuthContext';
+import { clearPendingProfileForUid, useAuth } from '../src/context/AuthContext';
 
 const RESEND_TIMEOUT = 30;
 
@@ -57,6 +57,7 @@ export default function VerifyEmailScreen() {
   };
 
   const handleLogout = async () => {
+    await clearPendingProfileForUid(user?.uid);
     await signOut(auth);
     router.replace('/login');
   };

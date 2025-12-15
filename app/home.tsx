@@ -3,7 +3,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import { router } from 'expo-router';
 import { signOut } from 'firebase/auth';
-import { useAuth } from '../src/context/AuthContext';
+import { clearPendingProfileForUid, useAuth } from '../src/context/AuthContext';
 import { auth } from '../src/lib/firebase';
 import { colors, typography } from '../src/theme/theme';
 
@@ -11,6 +11,7 @@ export default function HomeScreen() {
   const { user } = useAuth();
 
   const handleLogout = async () => {
+    await clearPendingProfileForUid(user?.uid);
     await signOut(auth);
     router.replace('/login');
   };
