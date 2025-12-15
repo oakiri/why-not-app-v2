@@ -3,7 +3,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { Text, StyleSheet, Pressable, Alert } from 'react-native';
 import { signOut } from 'firebase/auth';
 import useAuth from '../../hooks/useAuth';
-import { auth } from '../../api/firebase';
+import { auth } from '../../lib/firebase';
 import { colors, typography } from '../../theme/theme';
 
 const ProfileScreen = () => {

@@ -3,7 +3,7 @@ import { View, Text, TextInput, TouchableOpacity } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { router } from 'expo-router';
 import { signInWithEmailAndPassword } from 'firebase/auth';
-import { auth } from '../../api/firebase';
+import { auth } from '../../lib/firebase';
 import AuthLayout from '../../components/auth/AuthLayout';
 import { colors, typography } from '../../theme/theme';
 
@@ -11,18 +11,29 @@ export default function LoginScreen() {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
+  const [info, setInfo] = useState('');
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
 
   const handleLogin = async () => {
     setError('');
+    setInfo('');
+
     if (!email || !password) {
       setError('Por favor, introduce tu correo y contraseña.');
       return;
     }
     setLoading(true);
     try {
-      await signInWithEmailAndPassword(auth, email.trim(), password);
+      const { user } = await signInWithEmailAndPassword(auth, email.trim(), password);
+
+      if (!user.emailVerified) {
+        setInfo('Tu correo aún no está verificado. Revisa tu bandeja de entrada.');
+        router.replace('/verify-email');
+        return;
+      }
+
+      router.replace('/home');
     } catch (e) {
       setError('No se ha podido iniciar sesión. Revisa tus datos.');
     } finally {
@@ -43,6 +54,9 @@ export default function LoginScreen() {
 
         {error ? (
           <Text style={{ color: 'red', marginBottom: 8 }}>{error}</Text>
+        ) : null}
+        {info ? (
+          <Text style={{ color: 'green', marginBottom: 8 }}>{info}</Text>
         ) : null}
 
         <TextInput

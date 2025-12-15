@@ -1,17 +1,19 @@
 import React, { useState } from 'react';
 import { View, Text, TextInput, TouchableOpacity } from 'react-native';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 import { Ionicons } from '@expo/vector-icons';
-import { createUserWithEmailAndPassword } from 'firebase/auth';
-import { doc, serverTimestamp, setDoc } from 'firebase/firestore';
-import { auth, db } from '../../api/firebase';
+import { router } from 'expo-router';
+import { createUserWithEmailAndPassword, sendEmailVerification } from 'firebase/auth';
+import { auth } from '../../lib/firebase';
+import { PENDING_PROFILE_KEY } from '../../context/AuthContext';
 import AuthLayout from '../../components/auth/AuthLayout';
 import { colors, typography } from '../../theme/theme';
 
 export default function RegisterScreen() {
-  const [name, setName] = useState('');
-  const [lastName, setLastName] = useState('');
-  const [phone, setPhone] = useState('');
-  const [address, setAddress] = useState('');
+  const [nombre, setNombre] = useState('');
+  const [apellidos, setApellidos] = useState('');
+  const [telefono, setTelefono] = useState('');
+  const [direccion, setDireccion] = useState('');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
@@ -23,18 +25,18 @@ export default function RegisterScreen() {
   const handleRegister = async () => {
     setError('');
 
-    if (!name || !lastName || !phone || !address || !email || !password || !confirmPassword) {
+    if (!nombre || !apellidos || !telefono || !direccion || !email || !password || !confirmPassword) {
       setError('Por favor, completa todos los campos.');
       return;
     }
 
-    if (!email.includes('@')) {
+    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
       setError('Introduce un correo electrónico válido.');
       return;
     }
 
-    if (!/^\d{9,}$/.test(phone)) {
-      setError('El teléfono debe contener solo dígitos y tener al menos 9 números.');
+    if (!/^\d{7,}$/.test(telefono)) {
+      setError('El teléfono debe contener solo dígitos y tener al menos 7 números.');
       return;
     }
 
@@ -51,16 +53,18 @@ export default function RegisterScreen() {
     setLoading(true);
     try {
       const { user } = await createUserWithEmailAndPassword(auth, email.trim(), password);
-      await setDoc(doc(db, 'users', user.uid), {
-        uid: user.uid,
-        name,
-        lastName,
-        phone,
-        address,
-        email,
-        role: 'cliente',
-        createdAt: serverTimestamp(),
-      });
+
+      const pendingProfile = {
+        nombre,
+        apellidos,
+        telefono,
+        direccion,
+        email: email.trim(),
+      };
+
+      await AsyncStorage.setItem(PENDING_PROFILE_KEY, JSON.stringify(pendingProfile));
+      await sendEmailVerification(user);
+      router.replace('/verify-email');
     } catch (e) {
       setError('No pudimos crear tu cuenta. Revisa tus datos.');
     } finally {
@@ -83,16 +87,16 @@ export default function RegisterScreen() {
           placeholder="Nombre"
           placeholderTextColor="#999"
           style={fieldStyle}
-          value={name}
-          onChangeText={setName}
+          value={nombre}
+          onChangeText={setNombre}
         />
 
         <TextInput
           placeholder="Apellidos"
           placeholderTextColor="#999"
           style={fieldStyle}
-          value={lastName}
-          onChangeText={setLastName}
+          value={apellidos}
+          onChangeText={setApellidos}
         />
 
         <TextInput
@@ -100,16 +104,16 @@ export default function RegisterScreen() {
           placeholderTextColor="#999"
           keyboardType="phone-pad"
           style={fieldStyle}
-          value={phone}
-          onChangeText={setPhone}
+          value={telefono}
+          onChangeText={setTelefono}
         />
 
         <TextInput
           placeholder="Dirección"
           placeholderTextColor="#999"
           style={fieldStyle}
-          value={address}
-          onChangeText={setAddress}
+          value={direccion}
+          onChangeText={setDireccion}
         />
 
         <TextInput
