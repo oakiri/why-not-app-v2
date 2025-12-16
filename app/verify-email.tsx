@@ -50,7 +50,7 @@ export default function VerifyEmailScreen() {
     const refreshed = await refreshUser();
 
     if (refreshed?.emailVerified) {
-      router.replace('/home');
+      router.replace('/(tabs)/home');
     } else {
       setStatus('Aún no detectamos el correo verificado. Vuelve a intentarlo en unos segundos.');
     }

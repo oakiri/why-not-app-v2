@@ -1,6 +1,7 @@
 import React from 'react';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Text, StyleSheet, Pressable, Alert } from 'react-native';
+import { router } from 'expo-router';
 import { signOut } from 'firebase/auth';
 import useAuth from '../../hooks/useAuth';
 import { auth } from '../../lib/firebase';
@@ -15,6 +16,7 @@ const ProfileScreen = () => {
     try {
       await clearPendingProfileForUid(user?.uid);
       await signOut(auth);
+      router.replace('/login');
     } catch (error) {
       Alert.alert('Error al cerrar sesión', error.message);
     }
