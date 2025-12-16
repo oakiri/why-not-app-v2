@@ -45,7 +45,8 @@ function AuthGate({ children }: { children: React.ReactNode }) {
   useEffect(() => {
     if (initializing) return;
 
-    const isAuthRoute = pathname === "/login" || pathname === "/register";
+    const publicRoutes = ["/login", "/register", "/forgot-password", "/verify-email"];
+    const isAuthRoute = publicRoutes.includes(pathname ?? "");
     const isVerifyRoute = pathname === "/verify-email";
 
     if (!user) {

@@ -16,15 +16,35 @@ export default function HomeScreen() {
     router.replace('/login');
   };
 
+  const handleGoToMenu = () => {
+    console.log('[NAV] Ir a carta');
+    router.push('/menu');
+  };
+
+  const handleGoToCart = () => {
+    console.log('[NAV] Ir a carrito');
+    router.push('/cart');
+  };
+
   return (
     <SafeAreaView style={styles.container}>
       <View style={styles.inner}>
         <Text style={[styles.title, typography.title]}>Bienvenido</Text>
         <Text style={styles.subtitle}>{user?.email}</Text>
 
-        <TouchableOpacity style={styles.button} onPress={handleLogout}>
-          <Text style={styles.buttonText}>Cerrar sesión</Text>
-        </TouchableOpacity>
+        <View style={styles.actions}>
+          <TouchableOpacity style={styles.secondaryButton} onPress={handleGoToMenu}>
+            <Text style={styles.buttonText}>Ir a carta</Text>
+          </TouchableOpacity>
+
+          <TouchableOpacity style={styles.secondaryButton} onPress={handleGoToCart}>
+            <Text style={styles.buttonText}>Ir a carrito</Text>
+          </TouchableOpacity>
+
+          <TouchableOpacity style={styles.button} onPress={handleLogout}>
+            <Text style={styles.buttonText}>Cerrar sesión</Text>
+          </TouchableOpacity>
+        </View>
       </View>
     </SafeAreaView>
   );
@@ -49,11 +69,25 @@ const styles = StyleSheet.create({
     color: colors.textMuted,
     marginBottom: 20,
   },
+  actions: {
+    width: '100%',
+    gap: 12,
+  },
   button: {
     backgroundColor: colors.primary,
     paddingVertical: 14,
     paddingHorizontal: 18,
     borderRadius: 12,
+    alignItems: 'center',
+  },
+  secondaryButton: {
+    backgroundColor: colors.card,
+    paddingVertical: 14,
+    paddingHorizontal: 18,
+    borderRadius: 12,
+    alignItems: 'center',
+    borderWidth: 1,
+    borderColor: colors.primary,
   },
   buttonText: {
     color: colors.text,
