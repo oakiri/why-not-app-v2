@@ -32,12 +32,14 @@ export default function LoginScreen() {
       // Si no está verificado, lo mandamos a la pantalla de verificación
       if (!user.emailVerified) {
         setInfo('Tu correo aún no está verificado. Revisa tu bandeja de entrada.');
+        console.log('[NAV] Login redirect (email not verified) -> /verify-email');
         router.replace('/verify-email');
         return;
       }
 
       // Si está verificado, entramos
-      router.replace('/home');
+      console.log('[NAV] Login redirect (authenticated) -> /(tabs)/home');
+      router.replace('/(tabs)/home');
     } catch (e) {
       setError(mapAuthErrorMessage(e));
     } finally {

@@ -49,27 +49,32 @@ function AuthGate({ children }: { children: React.ReactNode }) {
     const isPublicRoute = publicRoutes.includes(pathname);
     const isTabsRoute = pathname.startsWith("/(tabs)");
 
+    const redirect = (href: string, reason: string) => {
+      console.log(`[NAV] ${reason} -> ${href} (from ${pathname})`);
+      router.replace(href);
+    };
+
     if (!user) {
       if (!isPublicRoute) {
-        router.replace("/login");
+        redirect("/login", "User not authenticated");
       }
       return;
     }
 
     if (!user.emailVerified) {
       if (pathname !== "/verify-email") {
-        router.replace("/verify-email");
+        redirect("/verify-email", "Email not verified");
       }
       return;
     }
 
     if (isPublicRoute || pathname === "/home") {
-      router.replace("/(tabs)/home");
+      redirect("/(tabs)/home", "Authenticated user on public or legacy home");
       return;
     }
 
     if (!isTabsRoute) {
-      router.replace("/(tabs)/home");
+      redirect("/(tabs)/home", "Authenticated user outside tabs");
     }
   }, [user, initializing, pathname, router]);
 
