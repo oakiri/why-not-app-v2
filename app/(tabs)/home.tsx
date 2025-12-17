@@ -1,10 +1,8 @@
 import React, { useCallback } from 'react';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { StyleSheet, Text, TouchableOpacity, View } from 'react-native';
-import { router, useFocusEffect } from 'expo-router';
-import { signOut } from 'firebase/auth';
-import { clearPendingProfileForUid, useAuth } from '../../src/context/AuthContext';
-import { auth } from '../../src/lib/firebase';
+import { StyleSheet, Text, View } from 'react-native';
+import { useFocusEffect } from 'expo-router';
+import { useAuth } from '../../src/context/AuthContext';
 import { colors, typography } from '../../src/theme/theme';
 
 export default function HomeTab() {
@@ -19,34 +17,31 @@ export default function HomeTab() {
     }, []),
   );
 
-  const handleLogout = async () => {
-    await clearPendingProfileForUid(user?.uid);
-    await signOut(auth);
-    router.replace('/login');
-  };
-
   return (
     <SafeAreaView style={styles.container}>
       <View style={styles.header}>
-        <Text style={[styles.title, typography.title]}>Bienvenido</Text>
-        <Text style={styles.subtitle}>{user?.email}</Text>
+        <Text style={[styles.title, typography.title]}>Promociones</Text>
+        <Text style={styles.subtitle}>
+          {user?.email ? `Hola, ${user.email}` : 'Descubre nuestras novedades'}
+        </Text>
       </View>
 
-      <View style={styles.actions}>
-        <TouchableOpacity style={styles.linkButton} onPress={() => router.push('/(tabs)/menu')}>
-          <Text style={styles.linkText}>Ir al menú</Text>
-        </TouchableOpacity>
-        <TouchableOpacity style={styles.linkButton} onPress={() => router.push('/(tabs)/cart')}>
-          <Text style={styles.linkText}>Ver carrito</Text>
-        </TouchableOpacity>
-        <TouchableOpacity style={styles.linkButton} onPress={() => router.push('/(tabs)/profile')}>
-          <Text style={styles.linkText}>Perfil</Text>
-        </TouchableOpacity>
-      </View>
+      <View style={styles.promos}>
+        <View style={styles.promoCard}>
+          <Text style={styles.promoTitle}>Promo 1</Text>
+          <Text style={styles.promoText}>2x1 en burgers clásicas todo el día.</Text>
+        </View>
 
-      <TouchableOpacity style={styles.logoutButton} onPress={handleLogout}>
-        <Text style={styles.logoutText}>Cerrar sesión</Text>
-      </TouchableOpacity>
+        <View style={styles.promoCard}>
+          <Text style={styles.promoTitle}>Promo 2</Text>
+          <Text style={styles.promoText}>Combos con papas y bebida a precio especial.</Text>
+        </View>
+
+        <View style={styles.promoCard}>
+          <Text style={styles.promoTitle}>Novedad de la semana</Text>
+          <Text style={styles.promoText}>Prueba nuestra burger edición limitada.</Text>
+        </View>
+      </View>
     </SafeAreaView>
   );
 }
@@ -57,10 +52,10 @@ const styles = StyleSheet.create({
     backgroundColor: colors.background,
     paddingHorizontal: 24,
     paddingVertical: 32,
-    gap: 20,
+    gap: 24,
   },
   header: {
-    gap: 4,
+    gap: 6,
   },
   title: {
     color: colors.primary,
@@ -68,32 +63,29 @@ const styles = StyleSheet.create({
   subtitle: {
     color: colors.textMuted,
   },
-  actions: {
-    gap: 12,
+  promos: {
+    gap: 16,
   },
-  linkButton: {
+  promoCard: {
     backgroundColor: colors.card,
-    paddingVertical: 14,
+    paddingVertical: 16,
     paddingHorizontal: 18,
-    borderRadius: 12,
+    borderRadius: 14,
     borderWidth: 1,
     borderColor: colors.primary,
+    shadowColor: '#000',
+    shadowOpacity: 0.08,
+    shadowOffset: { width: 0, height: 2 },
+    shadowRadius: 8,
+    elevation: 3,
   },
-  linkText: {
-    color: colors.text,
-    fontWeight: '700',
-    textAlign: 'center',
-  },
-  logoutButton: {
-    marginTop: 'auto',
-    backgroundColor: colors.primary,
-    paddingVertical: 16,
-    borderRadius: 12,
-    alignItems: 'center',
-  },
-  logoutText: {
+  promoTitle: {
     color: colors.text,
     fontWeight: '700',
     fontSize: 16,
+    marginBottom: 6,
+  },
+  promoText: {
+    color: colors.textMuted,
   },
 });
