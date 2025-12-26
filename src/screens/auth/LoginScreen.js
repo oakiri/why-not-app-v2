@@ -32,12 +32,12 @@ export default function LoginScreen() {
       // Si no está verificado, lo mandamos a la pantalla de verificación
       if (!user.emailVerified) {
         setInfo('Tu correo aún no está verificado. Revisa tu bandeja de entrada.');
-        router.replace('/verify-email');
+        router.replace('/(auth)/verify-email');
         return;
       }
 
       // Si está verificado, entramos
-      router.replace('/home');
+      router.replace('/(tabs)/home');
     } catch (e) {
       setError(mapAuthErrorMessage(e));
     } finally {
@@ -47,12 +47,12 @@ export default function LoginScreen() {
 
   const goToRegister = () => {
     console.log('[AUTH] goToRegister -> /register');
-    router.push('/register');
+    router.push('/(auth)/register');
   };
 
   const goToForgotPassword = () => {
     console.log('[AUTH] goToForgotPassword -> /forgot-password');
-    router.push('/forgot-password');
+    router.push('/(auth)/forgot-password');
   };
 
   return (

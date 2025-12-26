@@ -9,12 +9,22 @@ import AuthLayout from '../../components/auth/AuthLayout';
 import { colors } from '../../theme/theme';
 import { mapAuthErrorMessage } from '../../utils/authErrorMessages';
 
+const isOfflineError = (error) => {
+  const message = String(error?.message ?? error).toLowerCase();
+  return message.includes('offline');
+};
+
 export default function RegisterScreen() {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
 
   const [name, setName] = useState('');
   const [phone, setPhone] = useState('');
+  const [line1, setLine1] = useState('');
+  const [line2, setLine2] = useState('');
+  const [city, setCity] = useState('');
+  const [province, setProvince] = useState('');
+  const [postalCode, setPostalCode] = useState('');
 
   const [error, setError] = useState('');
   const [info, setInfo] = useState('');
@@ -23,34 +33,61 @@ export default function RegisterScreen() {
   const handleRegister = async () => {
     setError('');
     setInfo('');
-
-    if (!email.trim() || !password) {
-      setError('Por favor, rellena email y contraseña.');
-      return;
-    }
-
     setLoading(true);
+
     try {
+      if (!email.trim() || !password) {
+        setError('Por favor, rellena email y contraseña.');
+        return;
+      }
+
+      if (!name.trim()) {
+        setError('Por favor, ingresa tu nombre.');
+        return;
+      }
+
+      if (!line1.trim() || !city.trim() || !province.trim() || !postalCode.trim()) {
+        setError('Por favor, completa la dirección obligatoria.');
+        return;
+      }
+
       const { user } = await createUserWithEmailAndPassword(auth, email.trim(), password);
 
+      // ✅ Enviar verificación (sin bloquear la UI)
+      void sendEmailVerification(user);
+
       // ✅ Escribe SIEMPRE el perfil en Firestore (aunque no esté verificado)
-      await setDoc(
-        doc(db, 'users', user.uid),
-        {
-          email: user.email,
-          name: name.trim(),
-          phone: phone.trim(),
-          role: 'cliente',
-          createdAt: serverTimestamp(),
-          updatedAt: serverTimestamp(),
-        },
-        { merge: true }
-      );
+      try {
+        await setDoc(
+          doc(db, 'users', user.uid),
+          {
+            email: user.email,
+            name: name.trim(),
+            phone: phone.trim(),
+            role: 'cliente',
+            address: {
+              line1: line1.trim(),
+              line2: line2.trim(),
+              city: city.trim(),
+              province: province.trim(),
+              postalCode: postalCode.trim(),
+            },
+            createdAt: serverTimestamp(),
+            updatedAt: serverTimestamp(),
+          },
+          { merge: true }
+        );
+        setInfo('Cuenta creada. Te hemos enviado un email para verificar.');
+      } catch (e) {
+        if (isOfflineError(e)) {
+          setInfo(
+            'Cuenta creada. Sin conexión: el perfil se sincronizará cuando vuelvas a tener red.'
+          );
+        } else {
+          throw e;
+        }
+      }
 
-      // ✅ Enviar verificación
-      await sendEmailVerification(user);
-
-      setInfo('Cuenta creada. Te hemos enviado un email para verificar.');
       router.replace('/(auth)/verify-email');
     } catch (e) {
       setError(mapAuthErrorMessage(e));
@@ -86,6 +123,61 @@ export default function RegisterScreen() {
           keyboardType="phone-pad"
           value={phone}
           onChangeText={setPhone}
+          style={{
+            borderWidth: 1, borderColor: '#DDD', borderRadius: 10,
+            paddingHorizontal: 12, paddingVertical: 10, marginBottom: 12,
+          }}
+        />
+
+        <TextInput
+          placeholder="Dirección (línea 1)"
+          placeholderTextColor="#999"
+          value={line1}
+          onChangeText={setLine1}
+          style={{
+            borderWidth: 1, borderColor: '#DDD', borderRadius: 10,
+            paddingHorizontal: 12, paddingVertical: 10, marginBottom: 12,
+          }}
+        />
+
+        <TextInput
+          placeholder="Dirección (línea 2)"
+          placeholderTextColor="#999"
+          value={line2}
+          onChangeText={setLine2}
+          style={{
+            borderWidth: 1, borderColor: '#DDD', borderRadius: 10,
+            paddingHorizontal: 12, paddingVertical: 10, marginBottom: 12,
+          }}
+        />
+
+        <TextInput
+          placeholder="Ciudad"
+          placeholderTextColor="#999"
+          value={city}
+          onChangeText={setCity}
+          style={{
+            borderWidth: 1, borderColor: '#DDD', borderRadius: 10,
+            paddingHorizontal: 12, paddingVertical: 10, marginBottom: 12,
+          }}
+        />
+
+        <TextInput
+          placeholder="Provincia"
+          placeholderTextColor="#999"
+          value={province}
+          onChangeText={setProvince}
+          style={{
+            borderWidth: 1, borderColor: '#DDD', borderRadius: 10,
+            paddingHorizontal: 12, paddingVertical: 10, marginBottom: 12,
+          }}
+        />
+
+        <TextInput
+          placeholder="Código postal"
+          placeholderTextColor="#999"
+          value={postalCode}
+          onChangeText={setPostalCode}
           style={{
             borderWidth: 1, borderColor: '#DDD', borderRadius: 10,
             paddingHorizontal: 12, paddingVertical: 10, marginBottom: 12,
