@@ -14,6 +14,8 @@ export type PendingProfile = {
 type AuthContextType = {
   user: User | null;
   loading: boolean;
+  isReady: boolean;
+  isVerified: boolean;
   profile: PendingProfile | null;
   refreshProfile: () => Promise<void>;
   upsertProfile: (data: PendingProfile) => Promise<void>;
@@ -76,18 +78,21 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     return () => unsub();
   }, []);
 
-  const value = useMemo<AuthContextType>(
-    () => ({
+  const value = useMemo<AuthContextType>(() => {
+    const isReady = !loading;
+    const isVerified = !!user?.emailVerified;
+    return {
       user,
       loading,
+      isReady,
+      isVerified,
       profile,
       refreshProfile,
       upsertProfile,
       clearPendingProfile,
       pendingKeyForUid,
-    }),
-    [user, loading, profile]
-  );
+    };
+  }, [user, loading, profile]);
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
 }

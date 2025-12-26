@@ -1,8 +1,8 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
 import { View, Text, TextInput, TouchableOpacity, ActivityIndicator } from 'react-native';
 import { router } from 'expo-router';
 import { signOut } from 'firebase/auth';
-import { doc, getDoc, setDoc } from 'firebase/firestore';
+import { doc, getDoc, setDoc, serverTimestamp } from 'firebase/firestore';
 
 import { auth, db } from '../../src/lib/firebase';
 import { useAuth } from '../../src/context/AuthContext';
@@ -13,6 +13,13 @@ type UserProfile = {
   name?: string;
   phone?: string;
   role?: string;
+  address?: {
+    line1?: string;
+    line2?: string;
+    city?: string;
+    province?: string;
+    postalCode?: string;
+  };
 };
 
 export default function ProfileTab() {
@@ -21,8 +28,16 @@ export default function ProfileTab() {
   const [profile, setProfile] = useState<UserProfile | null>(null);
   const [name, setName] = useState('');
   const [phone, setPhone] = useState('');
+  const [addressLine1, setAddressLine1] = useState('');
+  const [addressLine2, setAddressLine2] = useState('');
+  const [city, setCity] = useState('');
+  const [province, setProvince] = useState('');
+  const [postalCode, setPostalCode] = useState('');
   const [saving, setSaving] = useState(false);
   const [msg, setMsg] = useState('');
+  const [missingProfile, setMissingProfile] = useState(false);
+
+  const successMessage = useMemo(() => 'Guardado ✅', []);
 
   useEffect(() => {
     const run = async () => {
@@ -32,11 +47,17 @@ export default function ProfileTab() {
       try {
         const ref = doc(db, 'users', user.uid);
         const snap = await getDoc(ref);
-        const data = (snap.exists() ? (snap.data() as UserProfile) : null);
+        const data = snap.exists() ? (snap.data() as UserProfile) : null;
 
         setProfile(data);
+        setMissingProfile(!data);
         setName(data?.name || '');
         setPhone(data?.phone || '');
+        setAddressLine1(data?.address?.line1 || '');
+        setAddressLine2(data?.address?.line2 || '');
+        setCity(data?.address?.city || '');
+        setProvince(data?.address?.province || '');
+        setPostalCode(data?.address?.postalCode || '');
       } catch (e: any) {
         setMsg(`Error cargando perfil: ${e?.message || String(e)}`);
       } finally {
@@ -45,6 +66,12 @@ export default function ProfileTab() {
     };
     run();
   }, [user?.uid]);
+
+  useEffect(() => {
+    if (msg !== successMessage) return;
+    const timeout = setTimeout(() => setMsg(''), 2000);
+    return () => clearTimeout(timeout);
+  }, [msg, successMessage]);
 
   const saveProfile = async () => {
     if (!user?.uid) return;
@@ -59,13 +86,20 @@ export default function ProfileTab() {
           name: name.trim(),
           phone: phone.trim(),
           role: profile?.role || 'cliente',
-          updatedAt: new Date(),
+          address: {
+            line1: addressLine1.trim(),
+            line2: addressLine2.trim(),
+            city: city.trim(),
+            province: province.trim(),
+            postalCode: postalCode.trim(),
+          },
+          updatedAt: serverTimestamp(),
         },
         { merge: true }
       );
-      setMsg('Perfil actualizado.');
+      setMsg(successMessage);
     } catch (e: any) {
-      setMsg(`Error guardando: ${e?.message || String(e)}`);
+      setMsg('Error al guardar');
     } finally {
       setSaving(false);
     }
@@ -84,6 +118,11 @@ export default function ProfileTab() {
         <ActivityIndicator />
       ) : (
         <>
+          {missingProfile ? (
+            <Text style={{ marginBottom: 12, color: colors.textMuted }}>
+              No encontramos tu perfil todavía. Completa tus datos para guardarlos.
+            </Text>
+          ) : null}
           <Text style={{ fontFamily: 'Anton', fontSize: 14, marginBottom: 4 }}>Email</Text>
           <Text style={{ marginBottom: 12 }}>{user?.email}</Text>
 
@@ -101,6 +140,46 @@ export default function ProfileTab() {
             onChangeText={setPhone}
             placeholder="Tu teléfono"
             keyboardType="phone-pad"
+            style={{ borderWidth: 1, borderColor: '#DDD', borderRadius: 10, padding: 12, marginBottom: 12 }}
+          />
+
+          <Text style={{ fontFamily: 'Anton', fontSize: 14, marginBottom: 4 }}>Dirección</Text>
+          <TextInput
+            value={addressLine1}
+            onChangeText={setAddressLine1}
+            placeholder="Dirección"
+            style={{ borderWidth: 1, borderColor: '#DDD', borderRadius: 10, padding: 12, marginBottom: 12 }}
+          />
+
+          <Text style={{ fontFamily: 'Anton', fontSize: 14, marginBottom: 4 }}>Departamento / Piso</Text>
+          <TextInput
+            value={addressLine2}
+            onChangeText={setAddressLine2}
+            placeholder="Opcional"
+            style={{ borderWidth: 1, borderColor: '#DDD', borderRadius: 10, padding: 12, marginBottom: 12 }}
+          />
+
+          <Text style={{ fontFamily: 'Anton', fontSize: 14, marginBottom: 4 }}>Ciudad</Text>
+          <TextInput
+            value={city}
+            onChangeText={setCity}
+            placeholder="Ciudad"
+            style={{ borderWidth: 1, borderColor: '#DDD', borderRadius: 10, padding: 12, marginBottom: 12 }}
+          />
+
+          <Text style={{ fontFamily: 'Anton', fontSize: 14, marginBottom: 4 }}>Provincia</Text>
+          <TextInput
+            value={province}
+            onChangeText={setProvince}
+            placeholder="Provincia"
+            style={{ borderWidth: 1, borderColor: '#DDD', borderRadius: 10, padding: 12, marginBottom: 12 }}
+          />
+
+          <Text style={{ fontFamily: 'Anton', fontSize: 14, marginBottom: 4 }}>Código postal</Text>
+          <TextInput
+            value={postalCode}
+            onChangeText={setPostalCode}
+            placeholder="Código postal"
             style={{ borderWidth: 1, borderColor: '#DDD', borderRadius: 10, padding: 12, marginBottom: 12 }}
           />
 

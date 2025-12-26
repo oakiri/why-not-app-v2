@@ -15,6 +15,11 @@ export default function RegisterScreen() {
 
   const [name, setName] = useState('');
   const [phone, setPhone] = useState('');
+  const [addressLine1, setAddressLine1] = useState('');
+  const [addressLine2, setAddressLine2] = useState('');
+  const [city, setCity] = useState('');
+  const [province, setProvince] = useState('');
+  const [postalCode, setPostalCode] = useState('');
 
   const [error, setError] = useState('');
   const [info, setInfo] = useState('');
@@ -24,23 +29,45 @@ export default function RegisterScreen() {
     setError('');
     setInfo('');
 
-    if (!email.trim() || !password) {
-      setError('Por favor, rellena email y contraseña.');
-      return;
-    }
-
     setLoading(true);
     try {
-      const { user } = await createUserWithEmailAndPassword(auth, email.trim(), password);
+      const trimmedEmail = email.trim();
+      const trimmedName = name.trim();
+      const trimmedPhone = phone.trim();
+      const trimmedAddressLine1 = addressLine1.trim();
+      const trimmedAddressLine2 = addressLine2.trim();
+      const trimmedCity = city.trim();
+      const trimmedProvince = province.trim();
+      const trimmedPostalCode = postalCode.trim();
+
+      if (!trimmedName || !trimmedPhone || !trimmedEmail || !password) {
+        setError('Por favor, completa nombre, teléfono, email y contraseña.');
+        return;
+      }
+
+      if (!trimmedAddressLine1 || !trimmedCity || !trimmedProvince || !trimmedPostalCode) {
+        setError('Por favor, completa dirección, ciudad, provincia y código postal.');
+        return;
+      }
+
+      const { user } = await createUserWithEmailAndPassword(auth, trimmedEmail, password);
 
       // ✅ Escribe SIEMPRE el perfil en Firestore (aunque no esté verificado)
       await setDoc(
         doc(db, 'users', user.uid),
         {
+          uid: user.uid,
           email: user.email,
-          name: name.trim(),
-          phone: phone.trim(),
           role: 'cliente',
+          name: trimmedName,
+          phone: trimmedPhone,
+          address: {
+            line1: trimmedAddressLine1,
+            line2: trimmedAddressLine2,
+            city: trimmedCity,
+            province: trimmedProvince,
+            postalCode: trimmedPostalCode,
+          },
           createdAt: serverTimestamp(),
           updatedAt: serverTimestamp(),
         },
@@ -99,6 +126,61 @@ export default function RegisterScreen() {
           keyboardType="email-address"
           value={email}
           onChangeText={setEmail}
+          style={{
+            borderWidth: 1, borderColor: '#DDD', borderRadius: 10,
+            paddingHorizontal: 12, paddingVertical: 10, marginBottom: 12,
+          }}
+        />
+
+        <TextInput
+          placeholder="Dirección"
+          placeholderTextColor="#999"
+          value={addressLine1}
+          onChangeText={setAddressLine1}
+          style={{
+            borderWidth: 1, borderColor: '#DDD', borderRadius: 10,
+            paddingHorizontal: 12, paddingVertical: 10, marginBottom: 12,
+          }}
+        />
+
+        <TextInput
+          placeholder="Departamento / Piso (opcional)"
+          placeholderTextColor="#999"
+          value={addressLine2}
+          onChangeText={setAddressLine2}
+          style={{
+            borderWidth: 1, borderColor: '#DDD', borderRadius: 10,
+            paddingHorizontal: 12, paddingVertical: 10, marginBottom: 12,
+          }}
+        />
+
+        <TextInput
+          placeholder="Ciudad"
+          placeholderTextColor="#999"
+          value={city}
+          onChangeText={setCity}
+          style={{
+            borderWidth: 1, borderColor: '#DDD', borderRadius: 10,
+            paddingHorizontal: 12, paddingVertical: 10, marginBottom: 12,
+          }}
+        />
+
+        <TextInput
+          placeholder="Provincia"
+          placeholderTextColor="#999"
+          value={province}
+          onChangeText={setProvince}
+          style={{
+            borderWidth: 1, borderColor: '#DDD', borderRadius: 10,
+            paddingHorizontal: 12, paddingVertical: 10, marginBottom: 12,
+          }}
+        />
+
+        <TextInput
+          placeholder="Código postal"
+          placeholderTextColor="#999"
+          value={postalCode}
+          onChangeText={setPostalCode}
           style={{
             borderWidth: 1, borderColor: '#DDD', borderRadius: 10,
             paddingHorizontal: 12, paddingVertical: 10, marginBottom: 12,
