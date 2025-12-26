@@ -1,34 +1,49 @@
 import React, { createContext, useContext, useEffect, useMemo, useState } from 'react';
-import AsyncStorage from '@react-native-async-storage/async-storage';
 import { onAuthStateChanged, User } from 'firebase/auth';
-import { doc, getDoc, setDoc } from 'firebase/firestore';
+import { doc, getDoc, onSnapshot, setDoc } from 'firebase/firestore';
 
 import { auth, db } from '../lib/firebase';
 
-export type PendingProfile = {
+export type AddressProfile = {
+  line1?: string;
+  line2?: string;
+  city?: string;
+  province?: string;
+  postalCode?: string;
+};
+
+export type UserProfile = {
+  email?: string;
   name?: string;
   phone?: string;
   role?: string;
+  address?: AddressProfile;
+  updatedAt?: unknown;
 };
 
 type AuthContextType = {
   user: User | null;
   loading: boolean;
-  profile: PendingProfile | null;
+  isReady: boolean;
+  isVerified: boolean;
+  profile: UserProfile | null;
+  profileLoading: boolean;
   refreshProfile: () => Promise<void>;
-  upsertProfile: (data: PendingProfile) => Promise<void>;
-  clearPendingProfile: () => Promise<void>;
-  pendingKeyForUid: (uid: string) => string;
+  updateProfile: (data: Partial<UserProfile>) => Promise<void>;
 };
 
 const AuthContext = createContext<AuthContextType | null>(null);
 
-export const pendingKeyForUid = (uid: string) => `PENDING_PROFILE_${uid}`;
+const isOfflineError = (error: unknown) => {
+  const message = String((error as { message?: string })?.message ?? error).toLowerCase();
+  return message.includes('offline');
+};
 
 export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [user, setUser] = useState<User | null>(null);
   const [loading, setLoading] = useState(true);
-  const [profile, setProfile] = useState<PendingProfile | null>(null);
+  const [profile, setProfile] = useState<UserProfile | null>(null);
+  const [profileLoading, setProfileLoading] = useState(false);
 
   const refreshProfile = async () => {
     if (!auth.currentUser?.uid) {
@@ -36,57 +51,73 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       return;
     }
     const ref = doc(db, 'users', auth.currentUser.uid);
-    const snap = await getDoc(ref);
-    if (snap.exists()) setProfile(snap.data() as PendingProfile);
-    else setProfile(null);
+    setProfileLoading(true);
+    try {
+      const snap = await getDoc(ref);
+      if (snap.exists()) setProfile(snap.data() as UserProfile);
+      else setProfile(null);
+    } catch (error) {
+      if (!isOfflineError(error)) {
+        setProfile(null);
+      }
+    } finally {
+      setProfileLoading(false);
+    }
   };
 
-  const upsertProfile = async (data: PendingProfile) => {
+  const updateProfile = async (data: Partial<UserProfile>) => {
     if (!auth.currentUser?.uid) return;
     const ref = doc(db, 'users', auth.currentUser.uid);
     await setDoc(ref, data, { merge: true });
     await refreshProfile();
   };
 
-  const clearPendingProfile = async () => {
-    const uid = auth.currentUser?.uid;
-    if (!uid) return;
-    await AsyncStorage.removeItem(pendingKeyForUid(uid));
-  };
-
   useEffect(() => {
     const unsub = onAuthStateChanged(auth, async (u) => {
       setUser(u);
       setLoading(false);
-
-      // Carga perfil Firestore si existe
-      if (u?.uid) {
-        try {
-          const ref = doc(db, 'users', u.uid);
-          const snap = await getDoc(ref);
-          if (snap.exists()) setProfile(snap.data() as PendingProfile);
-          else setProfile(null);
-        } catch {
-          setProfile(null);
-        }
-      } else {
-        setProfile(null);
-      }
     });
     return () => unsub();
   }, []);
+
+  useEffect(() => {
+    if (!user?.uid) {
+      setProfile(null);
+      setProfileLoading(false);
+      return;
+    }
+
+    setProfileLoading(true);
+    const ref = doc(db, 'users', user.uid);
+    const unsubscribe = onSnapshot(
+      ref,
+      (snap) => {
+        setProfile(snap.exists() ? (snap.data() as UserProfile) : null);
+        setProfileLoading(false);
+      },
+      (error) => {
+        if (!isOfflineError(error)) {
+          setProfile(null);
+        }
+        setProfileLoading(false);
+      }
+    );
+
+    return () => unsubscribe();
+  }, [user?.uid]);
 
   const value = useMemo<AuthContextType>(
     () => ({
       user,
       loading,
+      isReady: !loading,
+      isVerified: !!user?.emailVerified,
       profile,
+      profileLoading,
       refreshProfile,
-      upsertProfile,
-      clearPendingProfile,
-      pendingKeyForUid,
+      updateProfile,
     }),
-    [user, loading, profile]
+    [user, loading, profile, profileLoading]
   );
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;

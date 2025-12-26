@@ -34,7 +34,7 @@ export default function ForgotPasswordScreen() {
   };
 
   const goToLogin = () => {
-    router.replace('/login');
+    router.replace('/(auth)/login');
   };
 
   return (

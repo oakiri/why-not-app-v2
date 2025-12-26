@@ -4,15 +4,20 @@ import { useAuth } from '../../src/context/AuthContext';
 import { colors } from '../../src/theme/theme';
 
 export default function HomeTab() {
-  const { user } = useAuth();
+  const { profile, profileLoading } = useAuth();
 
   return (
     <View style={{ flex: 1, padding: 20, backgroundColor: colors.background }}>
-      <Text style={{ fontFamily: 'Anton', fontSize: 28, color: colors.primary, marginBottom: 6 }}>
-        PROMOCIONES
+      <Text style={{ fontFamily: 'Anton', fontSize: 20, color: colors.text, marginBottom: 4 }}>
+        Hola, {profile?.name || 'amigo'}
       </Text>
-      <Text style={{ fontFamily: 'Anton', fontSize: 14, color: colors.textMuted, marginBottom: 18 }}>
-        Hola, {user?.email}
+      {profileLoading ? (
+        <Text style={{ fontFamily: 'Anton', fontSize: 12, color: colors.textMuted, marginBottom: 12 }}>
+          Cargando perfil...
+        </Text>
+      ) : null}
+      <Text style={{ fontFamily: 'Anton', fontSize: 28, color: colors.primary, marginBottom: 12 }}>
+        PROMOCIONES
       </Text>
 
       <View style={{ borderWidth: 1, borderColor: '#EEE', borderRadius: 14, padding: 14, marginBottom: 12 }}>
@@ -32,4 +37,3 @@ export default function HomeTab() {
     </View>
   );
 }
-
