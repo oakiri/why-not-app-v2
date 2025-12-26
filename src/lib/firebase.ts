@@ -6,31 +6,20 @@ import {
   initializeAuth,
   type Auth,
 } from 'firebase/auth';
-import {
-  getFirestore,
-  initializeFirestore,
-  type Firestore,
-} from 'firebase/firestore';
+import { getFirestore } from 'firebase/firestore';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 
 const firebaseConfig = {
-  apiKey: process.env.EXPO_PUBLIC_FIREBASE_API_KEY,
-  authDomain: process.env.EXPO_PUBLIC_FIREBASE_AUTH_DOMAIN,
-  projectId: process.env.EXPO_PUBLIC_FIREBASE_PROJECT_ID,
-  storageBucket: process.env.EXPO_PUBLIC_FIREBASE_STORAGE_BUCKET,
-  messagingSenderId: process.env.EXPO_PUBLIC_FIREBASE_MESSAGING_SENDER_ID,
-  appId: process.env.EXPO_PUBLIC_FIREBASE_APP_ID,
-  measurementId: process.env.EXPO_PUBLIC_FIREBASE_MEASUREMENT_ID,
+  apiKey: "AIzaSyDJVclMKWZMI9vLJUyxPKJVdD1r_NCxa_Y",
+  authDomain: "why-not-app-v2.firebaseapp.com",
+  projectId: "why-not-app-v2",
+  storageBucket: "why-not-app-v2.firebasestorage.app",
+  messagingSenderId: "62426939092",
+  appId: "1:62426939092:web:c22e840f206e2b49520541",
+  measurementId: "G-KCEZYL85N3",
 };
 
-const getFirebaseApp = () => {
-  if (getApps().length) {
-    return getApp();
-  }
-  return initializeApp(firebaseConfig);
-};
-
-const app = getFirebaseApp();
+const app = getApps().length ? getApp() : initializeApp(firebaseConfig);
 
 let auth: Auth;
 
@@ -41,19 +30,12 @@ if (Platform.OS === 'web') {
     auth = initializeAuth(app, {
       persistence: getReactNativePersistence(AsyncStorage),
     });
-  } catch (error) {
+  } catch {
+    // If Auth was already initialized (fast refresh), fall back
     auth = getAuth(app);
   }
 }
 
-let db: Firestore;
-
-if (Platform.OS === 'web') {
-  db = getFirestore(app);
-} else {
-  db = initializeFirestore(app, {
-    experimentalForceLongPolling: true,
-  });
-}
+const db = getFirestore(app);
 
 export { app, auth, db };
