@@ -1,4 +1,4 @@
-import React, { useEffect, useMemo, useState } from "react";
+import React, { useEffect, useState } from "react";
 import { 
   View, 
   Text, 
@@ -17,7 +17,7 @@ import { doc, getDoc, setDoc, deleteDoc } from "firebase/firestore";
 import { Ionicons } from '@expo/vector-icons';
 
 import { auth, db } from "../../lib/firebase";
-import useAuth from "../../hooks/useAuth";
+import { useAuth } from "../../context/AuthContext";
 import { colors } from "../../theme/theme";
 import CustomPicker from "../../components/ui/CustomPicker";
 
@@ -28,9 +28,8 @@ const JEREZ_ZIP_CODES = [
 ];
 
 export default function ProfileScreen() {
-  const { user } = useAuth();
+  const { user, profile, profileLoading } = useAuth();
 
-  const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [errors, setErrors] = useState({});
   const [info, setInfo] = useState("");
@@ -45,6 +44,20 @@ export default function ProfileScreen() {
     role: 'cliente'
   });
 
+  useEffect(() => {
+    if (profile) {
+      setFormData({
+        name: profile.name || "",
+        phone: profile.phone || "",
+        address: profile.address?.line1 || "",
+        city: profile.address?.city || "Jerez de la Frontera",
+        province: profile.address?.province || "Cádiz",
+        postalCode: profile.address?.postalCode || "",
+        role: profile.role || "cliente"
+      });
+    }
+  }, [profile]);
+
   const cityOptions = [
     { label: 'Jerez de la Frontera', value: 'Jerez de la Frontera' }
   ];
@@ -52,45 +65,6 @@ export default function ProfileScreen() {
   const provinceOptions = [
     { label: 'Cádiz', value: 'Cádiz' }
   ];
-
-  const ref = useMemo(() => (user ? doc(db, "users", user.uid) : null), [user]);
-
-  useEffect(() => {
-    let mounted = true;
-
-    const load = async () => {
-      if (!ref || !user) {
-        setLoading(false);
-        return;
-      }
-
-      try {
-        const snap = await getDoc(ref);
-        if (!mounted) return;
-
-        if (snap.exists()) {
-          const data = snap.data();
-          setFormData({
-            name: data.name || "",
-            phone: data.phone || "",
-            address: data.address?.line1 || "",
-            city: data.address?.city || "Jerez de la Frontera",
-            province: data.address?.province || "Cádiz",
-            postalCode: data.address?.postalCode || "",
-            role: data.role || "cliente"
-          });
-        }
-      } catch (e) {
-        if (!mounted) return;
-        setErrors({ general: "No se pudo cargar el perfil." });
-      } finally {
-        if (mounted) setLoading(false);
-      }
-    };
-
-    load();
-    return () => { mounted = false; };
-  }, [ref, user]);
 
   const validate = () => {
     let newErrors = {};
@@ -115,12 +89,12 @@ export default function ProfileScreen() {
     if (!validate()) return;
     setErrors({});
     setInfo("");
-    if (!ref || !user) return;
+    if (!user) return;
 
     setSaving(true);
     try {
       await setDoc(
-        ref,
+        doc(db, "users", user.uid),
         {
           name: formData.name.trim(),
           phone: formData.phone.trim(),
@@ -163,7 +137,6 @@ export default function ProfileScreen() {
           style: "destructive",
           onPress: async () => {
             try {
-              setLoading(true);
               const currentUser = auth.currentUser;
               if (currentUser) {
                 await deleteDoc(doc(db, "users", currentUser.uid));
@@ -172,8 +145,6 @@ export default function ProfileScreen() {
               }
             } catch (e) {
               Alert.alert("ERROR", "Por seguridad, cierra sesión e inicia de nuevo antes de eliminar tu cuenta.");
-            } finally {
-              setLoading(false);
             }
           }
         }
@@ -201,14 +172,14 @@ export default function ProfileScreen() {
     </View>
   );
 
-  if (loading) return <View style={styles.centered}><ActivityIndicator size="large" color={colors.primary} /></View>;
+  if (profileLoading) return <View style={styles.centered}><ActivityIndicator size="large" color={colors.primary} /></View>;
 
   return (
     <KeyboardAvoidingView 
       behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
       style={styles.container}
     >
-      <ScrollView contentContainerStyle={styles.scrollContent}>
+      <ScrollView contentContainerStyle={styles.scrollContent} showsVerticalScrollIndicator={false}>
         <Text style={styles.title}>MI PERFIL</Text>
 
         {errors.general && <Text style={styles.generalError}>{errors.general}</Text>}

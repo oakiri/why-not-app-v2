@@ -47,13 +47,13 @@ export default function AuthGate({ children }: { children?: React.ReactNode }) {
     const userRole = profile?.role || 'cliente';
 
     if (userRole === 'empleado' || userRole === 'master' || userRole === 'admin') {
-      // Personal autorizado -> Mostrar selector de roles si no está ya en backoffice o selector
-      if (!inBackoffice && route !== 'role-selector') {
+      // Personal autorizado -> Mostrar selector de roles si no está ya en backoffice, selector o tabs
+      if (!inBackoffice && !inTabs && route !== 'role-selector') {
         router.replace('/(auth)/role-selector');
       }
     } else {
       // Clientes van a las Tabs normales
-      if (!inTabs || inAuth) {
+      if (!inTabs) {
         router.replace('/(tabs)/home');
       }
     }

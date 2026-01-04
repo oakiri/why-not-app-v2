@@ -3,6 +3,8 @@ import { View, Text, TouchableOpacity, StyleSheet, Image, Dimensions } from 'rea
 import { router } from 'expo-router';
 import { colors } from '../../theme/theme';
 import { Ionicons } from '@expo/vector-icons';
+import { signOut } from 'firebase/auth';
+import { auth } from '../../lib/firebase';
 
 const { width } = Dimensions.get('window');
 
@@ -43,7 +45,13 @@ export default function RoleSelectorScreen() {
         </TouchableOpacity>
       </View>
 
-      <TouchableOpacity style={styles.logout} onPress={() => router.replace('/(auth)/login')}>
+      <TouchableOpacity 
+        style={styles.logout} 
+        onPress={async () => {
+          await signOut(auth);
+          router.replace('/(auth)/login');
+        }}
+      >
         <Text style={styles.logoutText}>Cerrar sesión</Text>
       </TouchableOpacity>
     </View>

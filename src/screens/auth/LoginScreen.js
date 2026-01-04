@@ -111,12 +111,7 @@ export default function LoginScreen() {
           </TouchableOpacity>
         </View>
 
-        <TouchableOpacity 
-          onPress={() => router.replace('/(auth)/employee-login')}
-          style={styles.employeeLink}
-        >
-          <Text style={styles.employeeLinkText}>Acceso Empleados →</Text>
-        </TouchableOpacity>
+
       </KeyboardAvoidingView>
     </AuthLayout>
   );

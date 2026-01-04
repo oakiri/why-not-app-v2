@@ -42,7 +42,7 @@ export default function DashboardScreen() {
         ...prev,
         pendingOrders: orders.length,
         todayOrders: orders.length + 15, // Mock data for today
-        todayRevenue: orders.reduce((sum, o) => sum + o.total, 0) + 450,
+        todayRevenue: orders.reduce((sum, o) => sum + (o.total || 0), 0) + 450,
       }));
       setLoading(false);
     });
@@ -132,14 +132,14 @@ export default function DashboardScreen() {
             pendingOrders.slice(0, 3).map((order) => (
               <TouchableOpacity key={order.id} style={styles.orderCard}>
                 <View style={styles.orderHeader}>
-                  <Text style={styles.orderId}>#{order.id.substring(0, 6)}</Text>
-                  <View style={[styles.statusBadge, { backgroundColor: ORDER_STATUS_COLORS[order.status] }]}>
-                    <Text style={styles.statusText}>{ORDER_STATUS_LABELS[order.status]}</Text>
+                  <Text style={styles.orderId}>#{order.id?.substring(0, 6) || '---'}</Text>
+                  <View style={[styles.statusBadge, { backgroundColor: order.status ? ORDER_STATUS_COLORS[order.status] : '#CCC' }]}>
+                    <Text style={styles.statusText}>{order.status ? ORDER_STATUS_LABELS[order.status] : 'PENDIENTE'}</Text>
                   </View>
                 </View>
                 <View style={styles.orderInfo}>
                   <Text style={styles.customerName}>{order.userName}</Text>
-                  <Text style={styles.orderTotal}>{order.total.toFixed(2)}€</Text>
+                  <Text style={styles.orderTotal}>{(order.total || 0).toFixed(2)}€</Text>
                 </View>
               </TouchableOpacity>
             ))
