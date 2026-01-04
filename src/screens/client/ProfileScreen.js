@@ -21,11 +21,19 @@ import useAuth from "../../hooks/useAuth";
 import { colors } from "../../theme/theme";
 import CustomPicker from "../../components/ui/CustomPicker";
 
+// Códigos postales válidos de Jerez de la Frontera
+const JEREZ_ZIP_CODES = [
+  '11401', '11402', '11403', '11404', '11405', '11406', '11407', '11408', '11409',
+  '11570', '11580', '11590', '11591', '11592', '11593', '11594', '11595', '11596'
+];
+
 export default function ProfileScreen() {
   const { user } = useAuth();
 
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
+  const [errors, setErrors] = useState({});
+  const [info, setInfo] = useState("");
 
   const [formData, setFormData] = useState({
     name: '',
@@ -44,9 +52,6 @@ export default function ProfileScreen() {
   const provinceOptions = [
     { label: 'Cádiz', value: 'Cádiz' }
   ];
-
-  const [info, setInfo] = useState("");
-  const [error, setError] = useState("");
 
   const ref = useMemo(() => (user ? doc(db, "users", user.uid) : null), [user]);
 
@@ -77,7 +82,7 @@ export default function ProfileScreen() {
         }
       } catch (e) {
         if (!mounted) return;
-        setError("No se pudo cargar el perfil.");
+        setErrors({ general: "No se pudo cargar el perfil." });
       } finally {
         if (mounted) setLoading(false);
       }
@@ -87,26 +92,28 @@ export default function ProfileScreen() {
     return () => { mounted = false; };
   }, [ref, user]);
 
-  const validateForm = () => {
-    const { name, phone, address, postalCode } = formData;
-    if (!name.trim() || !phone.trim() || !address.trim() || !postalCode.trim()) {
-      Alert.alert('Error', 'Por favor, rellena todos los campos obligatorios.');
-      return false;
+  const validate = () => {
+    let newErrors = {};
+
+    if (!formData.name.trim()) newErrors.name = 'El nombre es obligatorio';
+    
+    if (!formData.phone.trim()) newErrors.phone = 'El teléfono es obligatorio';
+    else if (!/^\d{9}$/.test(formData.phone.trim())) newErrors.phone = 'Debe tener 9 dígitos';
+
+    if (!formData.address.trim()) newErrors.address = 'La dirección es obligatoria';
+
+    if (!formData.postalCode.trim()) newErrors.postalCode = 'El C.P. es obligatorio';
+    else if (!JEREZ_ZIP_CODES.includes(formData.postalCode.trim())) {
+      newErrors.postalCode = 'C.P. no válido para Jerez';
     }
-    if (phone.trim().length !== 9) {
-      Alert.alert('Error', 'El teléfono debe tener 9 dígitos.');
-      return false;
-    }
-    if (postalCode.trim().length !== 5) {
-      Alert.alert('Error', 'El código postal debe tener 5 dígitos.');
-      return false;
-    }
-    return true;
+
+    setErrors(newErrors);
+    return Object.keys(newErrors).length === 0;
   };
 
   const save = async () => {
-    if (!validateForm()) return;
-    setError("");
+    if (!validate()) return;
+    setErrors({});
     setInfo("");
     if (!ref || !user) return;
 
@@ -128,8 +135,9 @@ export default function ProfileScreen() {
         { merge: true }
       );
       setInfo("Perfil guardado correctamente.");
+      setTimeout(() => setInfo(""), 3000);
     } catch (e) {
-      setError("No se pudo guardar el perfil.");
+      setErrors({ general: "No se pudo guardar el perfil." });
     } finally {
       setSaving(false);
     }
@@ -173,6 +181,26 @@ export default function ProfileScreen() {
     );
   };
 
+  const renderInput = (label, field, options = {}) => (
+    <View style={styles.inputGroup}>
+      <Text style={styles.label}>{label}</Text>
+      <View style={[styles.inputWrapper, errors[field] && styles.inputError, options.editable === false && styles.disabledInput]}>
+        <TextInput
+          value={field === 'email' ? user?.email : formData[field]}
+          onChangeText={(t) => {
+            setFormData({ ...formData, [field]: t });
+            if (errors[field]) setErrors({ ...errors, [field]: null });
+          }}
+          editable={options.editable !== false}
+          keyboardType={options.keyboardType || "default"}
+          maxLength={options.maxLength}
+          style={[styles.input, options.style]}
+        />
+      </View>
+      {errors[field] && <Text style={styles.errorText}>{errors[field]}</Text>}
+    </View>
+  );
+
   if (loading) return <View style={styles.centered}><ActivityIndicator size="large" color={colors.primary} /></View>;
 
   return (
@@ -183,65 +211,47 @@ export default function ProfileScreen() {
       <ScrollView contentContainerStyle={styles.scrollContent}>
         <Text style={styles.title}>MI PERFIL</Text>
 
-        {error ? <Text style={styles.errorText}>{error}</Text> : null}
+        {errors.general && <Text style={styles.generalError}>{errors.general}</Text>}
         {info ? <Text style={styles.infoText}>{info}</Text> : null}
 
-        <View style={styles.formGroup}>
-          <Text style={styles.label}>Email</Text>
-          <TextInput value={user?.email} editable={false} style={[styles.input, styles.disabledInput]} />
-
-          <Text style={styles.label}>Nombre completo</Text>
-          <TextInput
-            value={formData.name}
-            onChangeText={(t) => setFormData({...formData, name: t})}
-            style={styles.input}
-          />
-
-          <Text style={styles.label}>Teléfono (9 dígitos)</Text>
-          <TextInput
-            value={formData.phone}
-            onChangeText={(t) => setFormData({...formData, phone: t})}
-            keyboardType="phone-pad"
-            maxLength={9}
-            style={styles.input}
-          />
-
-          <Text style={styles.label}>Dirección de entrega</Text>
-          <TextInput
-            value={formData.address}
-            onChangeText={(t) => setFormData({...formData, address: t})}
-            style={styles.input}
-          />
+        <View style={styles.formSection}>
+          {renderInput("Email", "email", { editable: false })}
+          {renderInput("Nombre completo", "name", { autoCapitalize: "words" })}
+          {renderInput("Teléfono (9 dígitos)", "phone", { keyboardType: "phone-pad", maxLength: 9 })}
+          {renderInput("Dirección de entrega", "address")}
 
           <View style={{ flexDirection: 'row', gap: 10, marginBottom: 16 }}>
-            <CustomPicker
-              options={cityOptions}
-              selectedValue={formData.city}
-              onValueChange={(v) => setFormData({ ...formData, city: v })}
-              style={{ flex: 1, marginBottom: 0 }}
-            />
-            <TextInput
-              placeholder="C.P."
-              keyboardType="numeric"
-              maxLength={5}
-              value={formData.postalCode}
-              onChangeText={(t) => setFormData({ ...formData, postalCode: t })}
-              style={[styles.input, { width: 80, marginBottom: 0 }]}
-            />
+            <View style={{ flex: 1 }}>
+              <CustomPicker
+                label="Ciudad"
+                options={cityOptions}
+                selectedValue={formData.city}
+                onValueChange={(v) => setFormData({ ...formData, city: v })}
+                style={{ marginBottom: 0 }}
+              />
+            </View>
+            <View style={{ width: 100 }}>
+              {renderInput("C.P.", "postalCode", { keyboardType: "numeric", maxLength: 5, style: { marginBottom: 0 } })}
+            </View>
           </View>
 
           <CustomPicker
+            label="Provincia"
             options={provinceOptions}
             selectedValue={formData.province}
             onValueChange={(v) => setFormData({ ...formData, province: v })}
             style={{ marginBottom: 16 }}
           />
 
-          <Text style={styles.label}>Rol de usuario</Text>
-          <TextInput value={formData.role.toUpperCase()} editable={false} style={[styles.input, styles.disabledInput]} />
+          <View style={styles.inputGroup}>
+            <Text style={styles.label}>Rol de usuario</Text>
+            <View style={[styles.inputWrapper, styles.disabledInput]}>
+              <Text style={[styles.input, { color: '#999' }]}>{formData.role.toUpperCase()}</Text>
+            </View>
+          </View>
         </View>
 
-        <TouchableOpacity onPress={save} disabled={saving} style={styles.primaryButton}>
+        <TouchableOpacity onPress={save} disabled={saving} style={[styles.primaryButton, saving && styles.buttonDisabled]}>
           {saving ? <ActivityIndicator color="#000" /> : <Text style={styles.primaryButtonText}>GUARDAR CAMBIOS</Text>}
         </TouchableOpacity>
 
@@ -263,16 +273,21 @@ const styles = StyleSheet.create({
   scrollContent: { padding: 24, paddingBottom: 40 },
   centered: { flex: 1, justifyContent: "center", alignItems: "center" },
   title: { fontFamily: "Anton", fontSize: 32, color: "#000", marginBottom: 24, textAlign: "center" },
-  formGroup: { marginBottom: 24 },
+  formSection: { marginBottom: 24 },
+  inputGroup: { marginBottom: 16 },
   label: { fontFamily: "Anton", fontSize: 14, color: colors.primary, marginBottom: 8, textTransform: "uppercase" },
-  input: { fontFamily: "Anton", borderWidth: 1, borderColor: "#DDD", borderRadius: 12, paddingHorizontal: 15, paddingVertical: 12, marginBottom: 16, fontSize: 16, color: "#000" },
-  disabledInput: { backgroundColor: "#F5F5F5", color: "#999" },
+  inputWrapper: { borderWidth: 1, borderColor: "#DDD", borderRadius: 12, backgroundColor: "#FFF", overflow: 'hidden' },
+  input: { fontFamily: "Anton", paddingHorizontal: 15, paddingVertical: 12, fontSize: 16, color: "#000" },
+  inputError: { borderColor: "#FF4444", backgroundColor: "#FFF5F5" },
+  disabledInput: { backgroundColor: "#F5F5F5" },
+  errorText: { color: "#FF4444", fontSize: 12, marginTop: 4, marginLeft: 5, fontFamily: "Anton" },
+  generalError: { backgroundColor: "#FF4444", color: "#FFF", padding: 12, borderRadius: 12, textAlign: "center", marginBottom: 20, fontFamily: "Anton" },
+  infoText: { backgroundColor: "#4CAF50", color: "#FFF", padding: 12, borderRadius: 12, textAlign: "center", marginBottom: 20, fontFamily: "Anton" },
   primaryButton: { backgroundColor: colors.primary, borderRadius: 12, paddingVertical: 16, alignItems: "center", marginBottom: 12, elevation: 2 },
+  buttonDisabled: { opacity: 0.7 },
   primaryButtonText: { fontFamily: "Anton", fontSize: 18, color: "#000" },
   secondaryButton: { borderWidth: 2, borderColor: colors.primary, borderRadius: 12, paddingVertical: 16, alignItems: "center", marginBottom: 32 },
   secondaryButtonText: { fontFamily: "Anton", fontSize: 16, color: colors.primary },
   deleteButton: { flexDirection: "row", alignItems: "center", justifyContent: "center", paddingVertical: 12 },
   deleteButtonText: { fontFamily: "Anton", color: "#FF4444", fontSize: 14, marginLeft: 8, textDecorationLine: "underline" },
-  errorText: { fontFamily: "Anton", color: "red", marginBottom: 12, textAlign: "center" },
-  infoText: { fontFamily: "Anton", color: "green", marginBottom: 12, textAlign: "center" },
 });

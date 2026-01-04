@@ -22,10 +22,17 @@ import { colors } from '../../theme/theme';
 import { mapAuthErrorMessage } from '../../utils/authErrorMessages';
 import CustomPicker from '../../components/ui/CustomPicker';
 
+// Códigos postales válidos de Jerez de la Frontera
+const JEREZ_ZIP_CODES = [
+  '11401', '11402', '11403', '11404', '11405', '11406', '11407', '11408', '11409',
+  '11570', '11580', '11590', '11591', '11592', '11593', '11594', '11595', '11596'
+];
+
 export default function RegisterScreen() {
   const [loading, setLoading] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
+  const [errors, setErrors] = useState({});
 
   const [formData, setFormData] = useState({
     email: '',
@@ -47,49 +54,37 @@ export default function RegisterScreen() {
     { label: 'Cádiz', value: 'Cádiz' }
   ];
 
-  const validateForm = () => {
-    const { email, password, confirmPassword, name, phone, address, postalCode } = formData;
+  const validate = () => {
+    let newErrors = {};
+
+    if (!formData.email.trim()) newErrors.email = 'El email es obligatorio';
+    else if (!/\S+@\S+\.\S+/.test(formData.email)) newErrors.email = 'Email no válido';
+
+    if (!formData.password) newErrors.password = 'La contraseña es obligatoria';
+    else if (formData.password.length < 6) newErrors.password = 'Mínimo 6 caracteres';
+
+    if (formData.password !== formData.confirmPassword) {
+      newErrors.confirmPassword = 'Las contraseñas no coinciden';
+    }
+
+    if (!formData.name.trim()) newErrors.name = 'El nombre es obligatorio';
     
-    if (!email.trim() || !password || !confirmPassword || !name.trim() || !phone.trim() || !address.trim() || !postalCode.trim()) {
-      Alert.alert('Error', 'Por favor, rellena todos los campos obligatorios.');
-      return false;
+    if (!formData.phone.trim()) newErrors.phone = 'El teléfono es obligatorio';
+    else if (!/^\d{9}$/.test(formData.phone.trim())) newErrors.phone = 'Debe tener 9 dígitos';
+
+    if (!formData.address.trim()) newErrors.address = 'La dirección es obligatoria';
+
+    if (!formData.postalCode.trim()) newErrors.postalCode = 'El C.P. es obligatorio';
+    else if (!JEREZ_ZIP_CODES.includes(formData.postalCode.trim())) {
+      newErrors.postalCode = 'C.P. no válido para Jerez';
     }
 
-    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-    if (!emailRegex.test(email.trim())) {
-      Alert.alert('Error', 'Por favor, introduce un email válido.');
-      return false;
-    }
-
-    if (password.length < 6) {
-      Alert.alert('Error', 'La contraseña debe tener al menos 6 caracteres.');
-      return false;
-    }
-
-    if (password !== confirmPassword) {
-      Alert.alert('Error', 'Las contraseñas no coinciden.');
-      return false;
-    }
-
-    // Validación estricta de teléfono (9 dígitos)
-    const phoneClean = phone.trim();
-    if (phoneClean.length !== 9 || isNaN(Number(phoneClean))) {
-      Alert.alert('Error', 'El teléfono debe tener exactamente 9 dígitos numéricos.');
-      return false;
-    }
-
-    // Validación estricta de CP (5 dígitos)
-    const cpClean = postalCode.trim();
-    if (cpClean.length !== 5 || isNaN(Number(cpClean))) {
-      Alert.alert('Error', 'El código postal debe tener exactamente 5 dígitos numéricos.');
-      return false;
-    }
-
-    return true;
+    setErrors(newErrors);
+    return Object.keys(newErrors).length === 0;
   };
 
   const handleRegister = async () => {
-    if (!validateForm()) return;
+    if (!validate()) return;
 
     setLoading(true);
     try {
@@ -101,6 +96,7 @@ export default function RegisterScreen() {
       await setDoc(
         doc(db, 'users', user.uid),
         {
+          uid: user.uid,
           email: user.email,
           name: formData.name.trim(),
           phone: formData.phone.trim(),
@@ -120,11 +116,41 @@ export default function RegisterScreen() {
       router.replace('/(auth)/verify-email');
     } catch (e) {
       console.error(e);
-      Alert.alert('Error', mapAuthErrorMessage(e));
+      setErrors({ general: mapAuthErrorMessage(e) });
     } finally {
       setLoading(false);
     }
   };
+
+  const renderInput = (placeholder, field, options = {}) => (
+    <View style={styles.inputGroup}>
+      <View style={[styles.inputWrapper, errors[field] && styles.inputError]}>
+        <TextInput
+          placeholder={placeholder}
+          placeholderTextColor="#999"
+          autoCapitalize={options.autoCapitalize || "none"}
+          keyboardType={options.keyboardType || "default"}
+          secureTextEntry={options.secure && !(field === 'password' ? showPassword : showConfirmPassword)}
+          value={formData[field]}
+          onChangeText={(t) => {
+            setFormData({ ...formData, [field]: t });
+            if (errors[field]) setErrors({ ...errors, [field]: null });
+          }}
+          style={[styles.input, options.style]}
+          maxLength={options.maxLength}
+        />
+        {options.secure && (
+          <TouchableOpacity 
+            onPress={() => field === 'password' ? setShowPassword(!showPassword) : setShowConfirmPassword(!showConfirmPassword)} 
+            style={styles.eyeIcon}
+          >
+            <Ionicons name={(field === 'password' ? showPassword : showConfirmPassword) ? "eye-off" : "eye"} size={20} color="#666" />
+          </TouchableOpacity>
+        )}
+      </View>
+      {errors[field] && <Text style={styles.errorText}>{errors[field]}</Text>}
+    </View>
+  );
 
   return (
     <AuthLayout>
@@ -138,93 +164,37 @@ export default function RegisterScreen() {
         >
           <Text style={styles.title}>CREAR CUENTA</Text>
 
+          {errors.general && <Text style={styles.generalError}>{errors.general}</Text>}
+
           <View style={styles.section}>
             <Text style={styles.sectionLabel}>Datos de acceso</Text>
-            <TextInput
-              placeholder="Correo electrónico"
-              placeholderTextColor="#999"
-              autoCapitalize="none"
-              keyboardType="email-address"
-              value={formData.email}
-              onChangeText={(t) => setFormData({ ...formData, email: t })}
-              style={styles.input}
-            />
-
-            <View style={styles.passwordContainer}>
-              <TextInput
-                placeholder="Contraseña"
-                placeholderTextColor="#999"
-                secureTextEntry={!showPassword}
-                value={formData.password}
-                onChangeText={(t) => setFormData({ ...formData, password: t })}
-                style={[styles.input, { flex: 1, marginBottom: 0 }]}
-              />
-              <TouchableOpacity onPress={() => setShowPassword(!showPassword)} style={styles.eyeIcon}>
-                <Ionicons name={showPassword ? "eye-off" : "eye"} size={20} color="#666" />
-              </TouchableOpacity>
-            </View>
-
-            <View style={[styles.passwordContainer, { marginTop: 12 }]}>
-              <TextInput
-                placeholder="Confirmar contraseña"
-                placeholderTextColor="#999"
-                secureTextEntry={!showConfirmPassword}
-                value={formData.confirmPassword}
-                onChangeText={(t) => setFormData({ ...formData, confirmPassword: t })}
-                style={[styles.input, { flex: 1, marginBottom: 0 }]}
-              />
-              <TouchableOpacity onPress={() => setShowConfirmPassword(!showConfirmPassword)} style={styles.eyeIcon}>
-                <Ionicons name={showConfirmPassword ? "eye-off" : "eye"} size={20} color="#666" />
-              </TouchableOpacity>
-            </View>
+            {renderInput("Correo electrónico", "email", { keyboardType: "email-address" })}
+            {renderInput("Contraseña", "password", { secure: true })}
+            {renderInput("Confirmar contraseña", "confirmPassword", { secure: true })}
           </View>
 
           <View style={styles.section}>
             <Text style={styles.sectionLabel}>Datos personales</Text>
-            <TextInput
-              placeholder="Nombre completo"
-              placeholderTextColor="#999"
-              value={formData.name}
-              onChangeText={(t) => setFormData({ ...formData, name: t })}
-              style={styles.input}
-            />
-            <TextInput
-              placeholder="Teléfono (9 dígitos)"
-              placeholderTextColor="#999"
-              keyboardType="phone-pad"
-              maxLength={9}
-              value={formData.phone}
-              onChangeText={(t) => setFormData({ ...formData, phone: t })}
-              style={styles.input}
-            />
+            {renderInput("Nombre completo", "name", { autoCapitalize: "words" })}
+            {renderInput("Teléfono (9 dígitos)", "phone", { keyboardType: "phone-pad", maxLength: 9 })}
           </View>
 
           <View style={styles.section}>
             <Text style={styles.sectionLabel}>Dirección de entrega</Text>
-            <TextInput
-              placeholder="Dirección (Calle, número, piso...)"
-              placeholderTextColor="#999"
-              value={formData.address}
-              onChangeText={(t) => setFormData({ ...formData, address: t })}
-              style={styles.input}
-            />
+            {renderInput("Dirección (Calle, número, piso...)", "address")}
             
             <View style={{ flexDirection: 'row', gap: 10, marginBottom: 12 }}>
-              <CustomPicker
-                options={cityOptions}
-                selectedValue={formData.city}
-                onValueChange={(v) => setFormData({ ...formData, city: v })}
-                style={{ flex: 1, marginBottom: 0 }}
-              />
-              <TextInput
-                placeholder="C.P."
-                placeholderTextColor="#999"
-                keyboardType="numeric"
-                maxLength={5}
-                value={formData.postalCode}
-                onChangeText={(t) => setFormData({ ...formData, postalCode: t })}
-                style={[styles.input, { width: 80, marginBottom: 0 }]}
-              />
+              <View style={{ flex: 1 }}>
+                <CustomPicker
+                  options={cityOptions}
+                  selectedValue={formData.city}
+                  onValueChange={(v) => setFormData({ ...formData, city: v })}
+                  style={{ marginBottom: 0 }}
+                />
+              </View>
+              <View style={{ width: 100 }}>
+                {renderInput("C.P.", "postalCode", { keyboardType: "numeric", maxLength: 5, style: { marginBottom: 0 } })}
+              </View>
             </View>
 
             <CustomPicker
@@ -238,7 +208,7 @@ export default function RegisterScreen() {
           <TouchableOpacity
             onPress={handleRegister}
             disabled={loading}
-            style={styles.button}
+            style={[styles.button, loading && styles.buttonDisabled]}
           >
             {loading ? <ActivityIndicator color="#000" /> : <Text style={styles.buttonText}>CREAR CUENTA</Text>}
           </TouchableOpacity>
@@ -258,10 +228,15 @@ const styles = StyleSheet.create({
   title: { fontFamily: 'Anton', fontSize: 32, marginBottom: 24, color: '#000', textAlign: 'center' },
   section: { marginBottom: 20 },
   sectionLabel: { fontFamily: 'Anton', fontSize: 14, color: colors.primary, marginBottom: 8, textTransform: 'uppercase' },
-  input: { fontFamily: 'Anton', borderWidth: 1, borderColor: '#DDD', borderRadius: 12, paddingHorizontal: 15, paddingVertical: 12, marginBottom: 12, backgroundColor: '#FFF', fontSize: 16, color: '#000' },
-  passwordContainer: { flexDirection: 'row', alignItems: 'center' },
-  eyeIcon: { position: 'absolute', right: 15, height: '100%', justifyContent: 'center' },
+  inputGroup: { marginBottom: 12 },
+  inputWrapper: { flexDirection: 'row', alignItems: 'center', borderWidth: 1, borderColor: '#DDD', borderRadius: 12, backgroundColor: '#FFF' },
+  input: { flex: 1, fontFamily: 'Anton', paddingHorizontal: 15, paddingVertical: 12, fontSize: 16, color: '#000' },
+  inputError: { borderColor: '#FF4444', backgroundColor: '#FFF5F5' },
+  errorText: { color: '#FF4444', fontSize: 12, marginTop: 4, marginLeft: 5, fontFamily: 'Anton' },
+  generalError: { backgroundColor: '#FF4444', color: '#FFF', padding: 12, borderRadius: 12, textAlign: 'center', marginBottom: 20, fontFamily: 'Anton' },
+  eyeIcon: { paddingHorizontal: 15 },
   button: { backgroundColor: colors.primary, borderRadius: 12, paddingVertical: 16, alignItems: 'center', marginBottom: 20, elevation: 3, shadowColor: '#000', shadowOffset: { width: 0, height: 2 }, shadowOpacity: 0.2, shadowRadius: 4 },
+  buttonDisabled: { opacity: 0.7 },
   buttonText: { fontFamily: 'Anton', fontSize: 18, color: '#000' },
   linkText: { color: colors.primary, fontFamily: 'Anton', textAlign: 'center', fontSize: 16 },
 });
