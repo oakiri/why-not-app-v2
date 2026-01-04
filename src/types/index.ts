@@ -1,5 +1,14 @@
 // User Types
-export type UserRole = 'customer' | 'employee' | 'admin';
+export type UserRole = 'customer' | 'employee' | 'master';
+
+export interface EmployeePermissions {
+  manageMenu: boolean;
+  manageOrders: boolean;
+  manageReservations: boolean;
+  managePromotions: boolean;
+  manageEmployees: boolean; // Solo Master debería tener esto por defecto
+  viewAnalytics: boolean;
+}
 
 export interface User {
   uid: string;
@@ -8,7 +17,9 @@ export interface User {
   photoURL?: string;
   phoneNumber?: string;
   role: UserRole;
+  permissions?: EmployeePermissions;
   loyaltyPoints?: number;
+  address?: DeliveryAddress;
   createdAt: Date;
   updatedAt: Date;
 }
@@ -30,6 +41,8 @@ export interface MenuItem {
   modifiers?: Modifier[];
   preparationTime?: number; // minutes
   tpvId?: string;
+  isPromotion?: boolean;
+  promoPrice?: number;
   createdAt: Date;
   updatedAt: Date;
 }
@@ -452,6 +465,7 @@ export type RootStackParamList = {
   CustomersManagement: undefined;
   Analytics: undefined;
   SettingsManagement: undefined;
+  EmployeeManagement: undefined;
 };
 
 // Backoffice specific types

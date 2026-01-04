@@ -6,16 +6,21 @@ import {
   ScrollView,
   TouchableOpacity,
   ActivityIndicator,
-  RefreshControl,
+  Dimensions,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
+import { router } from 'expo-router';
 
-import { subscribeToPendingOrders, reservationService } from '../../../services/firebase.service';
-import type { Order, Reservation, DashboardStats } from '../../../types';
+import { subscribeToPendingOrders, auth } from '../../../lib/firebase';
+import { useAuth } from '../../../context/AuthContext';
+import type { Order, DashboardStats } from '../../../types';
 import { COLORS, ORDER_STATUS_COLORS, ORDER_STATUS_LABELS } from '../../../constants';
 
+const { width } = Dimensions.get('window');
+
 export default function DashboardScreen() {
+  const { profile } = useAuth();
   const [pendingOrders, setPendingOrders] = useState<Order[]>([]);
   const [stats, setStats] = useState<DashboardStats>({
     todayOrders: 0,
@@ -26,6 +31,9 @@ export default function DashboardScreen() {
     newCustomers: 0,
   });
   const [loading, setLoading] = useState(true);
+
+  const isMaster = profile?.role === 'master';
+  const permissions = profile?.permissions;
 
   useEffect(() => {
     const unsubscribe = subscribeToPendingOrders((orders) => {
@@ -54,13 +62,31 @@ export default function DashboardScreen() {
     </View>
   );
 
+  const renderMenuOption = (title: string, icon: any, route: string, enabled: boolean = true) => {
+    if (!enabled) return null;
+    return (
+      <TouchableOpacity 
+        style={styles.menuOption} 
+        onPress={() => router.push(route as any)}
+      >
+        <Ionicons name={icon} size={24} color={COLORS.primary} />
+        <Text style={styles.menuOptionText}>{title}</Text>
+        <Ionicons name="chevron-forward" size={20} color="#CCC" />
+      </TouchableOpacity>
+    );
+  };
+
   return (
     <SafeAreaView style={styles.container} edges={['top']}>
       <View style={styles.header}>
-        <Text style={styles.headerTitle}>Panel de Control</Text>
-        <TouchableOpacity style={styles.notificationButton}>
-          <Ionicons name="notifications-outline" size={24} color={COLORS.text} />
-          <View style={styles.badge} />
+        <View>
+          <Text style={styles.headerTitle}>Panel de Control</Text>
+          <View style={[styles.roleBadge, { backgroundColor: isMaster ? '#FFD700' : COLORS.primary }]}>
+            <Text style={styles.roleText}>{profile?.role?.toUpperCase()}</Text>
+          </View>
+        </View>
+        <TouchableOpacity onPress={() => auth.signOut()} style={styles.logoutButton}>
+          <Ionicons name="log-out-outline" size={24} color={COLORS.text} />
         </TouchableOpacity>
       </View>
 
@@ -73,11 +99,29 @@ export default function DashboardScreen() {
           {renderStatCard('Reservas', 4, 'calendar-outline', COLORS.info)}
         </View>
 
-        {/* Pending Orders Section */}
+        {/* Quick Actions / Management Section */}
+        <View style={styles.section}>
+          <Text style={styles.sectionTitle}>GESTIÓN OPERATIVA</Text>
+          {renderMenuOption('Gestión de Pedidos', 'list', '/(backoffice)/orders', isMaster || permissions?.manageOrders)}
+          {renderMenuOption('Gestión de Menú', 'restaurant-outline', '/(backoffice)/menu', isMaster || permissions?.manageMenu)}
+          {renderMenuOption('Gestión de Reservas', 'calendar-outline', '/(backoffice)/reservations', isMaster || permissions?.manageReservations)}
+          {renderMenuOption('Promociones', 'pricetag-outline', '/(backoffice)/promotions', isMaster || permissions?.managePromotions)}
+        </View>
+
+        {isMaster && (
+          <View style={styles.section}>
+            <Text style={styles.sectionTitle}>ADMINISTRACIÓN (MASTER)</Text>
+            {renderMenuOption('Gestión de Equipo', 'people-circle-outline', '/(backoffice)/employees')}
+            {renderMenuOption('Analíticas Avanzadas', 'bar-chart-outline', '/(backoffice)/analytics')}
+            {renderMenuOption('Configuración TPV', 'settings-outline', '/(backoffice)/settings')}
+          </View>
+        )}
+
+        {/* Pending Orders Summary */}
         <View style={styles.section}>
           <View style={styles.sectionHeader}>
-            <Text style={styles.sectionTitle}>Pedidos Pendientes</Text>
-            <TouchableOpacity>
+            <Text style={styles.sectionTitle}>PEDIDOS PENDIENTES</Text>
+            <TouchableOpacity onPress={() => router.push('/(backoffice)/orders')}>
               <Text style={styles.seeAllText}>Ver todos</Text>
             </TouchableOpacity>
           </View>
@@ -85,7 +129,7 @@ export default function DashboardScreen() {
           {loading ? (
             <ActivityIndicator color={COLORS.primary} style={{ margin: 20 }} />
           ) : pendingOrders.length > 0 ? (
-            pendingOrders.map((order) => (
+            pendingOrders.slice(0, 3).map((order) => (
               <TouchableOpacity key={order.id} style={styles.orderCard}>
                 <View style={styles.orderHeader}>
                   <Text style={styles.orderId}>#{order.id.substring(0, 6)}</Text>
@@ -95,10 +139,6 @@ export default function DashboardScreen() {
                 </View>
                 <View style={styles.orderInfo}>
                   <Text style={styles.customerName}>{order.userName}</Text>
-                  <Text style={styles.orderTime}>Hace 5 min</Text>
-                </View>
-                <View style={styles.orderFooter}>
-                  <Text style={styles.orderItems}>{order.items.length} productos</Text>
                   <Text style={styles.orderTotal}>{order.total.toFixed(2)}€</Text>
                 </View>
               </TouchableOpacity>
@@ -106,33 +146,11 @@ export default function DashboardScreen() {
           ) : (
             <View style={styles.emptyState}>
               <Ionicons name="checkmark-circle-outline" size={48} color={COLORS.success} />
-              <Text style={styles.emptyText}>¡Todo al día! No hay pedidos pendientes.</Text>
+              <Text style={styles.emptyText}>¡Todo al día!</Text>
             </View>
           )}
         </View>
-
-        {/* Quick Actions */}
-        <View style={styles.section}>
-          <Text style={styles.sectionTitle}>Acciones Rápidas</Text>
-          <View style={styles.actionGrid}>
-            <TouchableOpacity style={styles.actionButton}>
-              <Ionicons name="add-circle-outline" size={24} color={COLORS.primary} />
-              <Text style={styles.actionText}>Nuevo Pedido</Text>
-            </TouchableOpacity>
-            <TouchableOpacity style={styles.actionButton}>
-              <Ionicons name="restaurant-outline" size={24} color={COLORS.primary} />
-              <Text style={styles.actionText}>Gestión Menú</Text>
-            </TouchableOpacity>
-            <TouchableOpacity style={styles.actionButton}>
-              <Ionicons name="people-outline" size={24} color={COLORS.primary} />
-              <Text style={styles.actionText}>Clientes</Text>
-            </TouchableOpacity>
-            <TouchableOpacity style={styles.actionButton}>
-              <Ionicons name="settings-outline" size={24} color={COLORS.primary} />
-              <Text style={styles.actionText}>Ajustes</Text>
-            </TouchableOpacity>
-          </View>
-        </View>
+        <View style={{ height: 40 }} />
       </ScrollView>
     </SafeAreaView>
   );
@@ -140,34 +158,31 @@ export default function DashboardScreen() {
 
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: COLORS.background },
-  header: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', padding: 16, borderBottomWidth: 1, borderBottomColor: COLORS.border },
-  headerTitle: { fontSize: 20, fontWeight: '800', color: COLORS.text },
-  notificationButton: { padding: 4 },
-  badge: { position: 'absolute', top: 4, right: 4, width: 10, height: 10, borderRadius: 5, backgroundColor: COLORS.error, borderWidth: 2, borderColor: COLORS.white },
+  header: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', padding: 16, borderBottomWidth: 1, borderBottomColor: COLORS.border, backgroundColor: '#FFF' },
+  headerTitle: { fontSize: 20, fontFamily: 'Anton', color: COLORS.text },
+  roleBadge: { alignSelf: 'flex-start', paddingHorizontal: 8, paddingVertical: 2, borderRadius: 4, marginTop: 2 },
+  roleText: { fontSize: 10, fontWeight: 'bold', color: '#000' },
+  logoutButton: { padding: 8 },
   content: { flex: 1, padding: 16 },
   statsGrid: { flexDirection: 'row', flexWrap: 'wrap', gap: 12, marginBottom: 24 },
-  statCard: { width: '48%', backgroundColor: COLORS.white, padding: 16, borderRadius: 16, flexDirection: 'row', alignItems: 'center', gap: 12, elevation: 2, shadowColor: '#000', shadowOffset: { width: 0, height: 2 }, shadowOpacity: 0.1, shadowRadius: 4 },
+  statCard: { width: (width - 44) / 2, backgroundColor: COLORS.white, padding: 16, borderRadius: 16, flexDirection: 'row', alignItems: 'center', gap: 12, elevation: 2, shadowColor: '#000', shadowOffset: { width: 0, height: 2 }, shadowOpacity: 0.1, shadowRadius: 4 },
   statIcon: { width: 40, height: 40, borderRadius: 12, justifyContent: 'center', alignItems: 'center' },
-  statValue: { fontSize: 18, fontWeight: '700', color: COLORS.text },
+  statValue: { fontSize: 18, fontFamily: 'Anton', color: COLORS.text },
   statTitle: { fontSize: 12, color: COLORS.textSecondary },
-  section: { marginBottom: 32 },
-  sectionHeader: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16 },
-  sectionTitle: { fontSize: 18, fontWeight: '700', color: COLORS.text },
-  seeAllText: { color: COLORS.primary, fontWeight: '600' },
-  orderCard: { backgroundColor: COLORS.white, padding: 16, borderRadius: 16, marginBottom: 12, elevation: 2, shadowColor: '#000', shadowOffset: { width: 0, height: 2 }, shadowOpacity: 0.1, shadowRadius: 4 },
-  orderHeader: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 8 },
-  orderId: { fontSize: 14, fontWeight: '700', color: COLORS.textSecondary },
-  statusBadge: { paddingHorizontal: 8, paddingVertical: 4, borderRadius: 8 },
-  statusText: { color: COLORS.white, fontSize: 10, fontWeight: '700' },
-  orderInfo: { flexDirection: 'row', justifyContent: 'space-between', marginBottom: 8 },
-  customerName: { fontSize: 16, fontWeight: '600' },
-  orderTime: { fontSize: 12, color: COLORS.textSecondary },
-  orderFooter: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', borderTopWidth: 1, borderTopColor: COLORS.border, paddingTop: 8 },
-  orderItems: { fontSize: 12, color: COLORS.textSecondary },
-  orderTotal: { fontSize: 16, fontWeight: '700', color: COLORS.primary },
-  emptyState: { alignItems: 'center', padding: 32 },
-  emptyText: { marginTop: 12, color: COLORS.textSecondary, textAlign: 'center' },
-  actionGrid: { flexDirection: 'row', flexWrap: 'wrap', gap: 12 },
-  actionButton: { width: '23%', backgroundColor: COLORS.white, padding: 12, borderRadius: 12, alignItems: 'center', gap: 8, elevation: 2 },
-  actionText: { fontSize: 10, fontWeight: '600', textAlign: 'center' },
+  section: { marginBottom: 24 },
+  sectionHeader: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 12 },
+  sectionTitle: { fontSize: 14, fontFamily: 'Anton', color: '#999', letterSpacing: 1 },
+  seeAllText: { color: COLORS.primary, fontWeight: '600', fontSize: 12 },
+  menuOption: { backgroundColor: '#FFF', flexDirection: 'row', alignItems: 'center', padding: 16, borderRadius: 12, marginBottom: 8, elevation: 1 },
+  menuOptionText: { flex: 1, fontFamily: 'Anton', fontSize: 16, marginLeft: 12, color: '#333' },
+  orderCard: { backgroundColor: COLORS.white, padding: 12, borderRadius: 12, marginBottom: 8, elevation: 1 },
+  orderHeader: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 4 },
+  orderId: { fontSize: 12, fontWeight: '700', color: COLORS.textSecondary },
+  statusBadge: { paddingHorizontal: 6, paddingVertical: 2, borderRadius: 4 },
+  statusText: { color: COLORS.white, fontSize: 9, fontWeight: '700' },
+  orderInfo: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' },
+  customerName: { fontSize: 14, fontWeight: '600' },
+  orderTotal: { fontSize: 14, fontWeight: '700', color: COLORS.primary },
+  emptyState: { alignItems: 'center', padding: 20, backgroundColor: '#FFF', borderRadius: 12 },
+  emptyText: { marginTop: 8, color: COLORS.textSecondary, fontSize: 12 },
 });
