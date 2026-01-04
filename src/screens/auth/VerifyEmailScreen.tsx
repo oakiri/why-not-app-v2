@@ -1,9 +1,10 @@
 import React, { useMemo, useState } from "react";
-import { View, Text, TouchableOpacity, StyleSheet, ActivityIndicator } from "react-native";
+import { View, Text, TouchableOpacity, StyleSheet, ActivityIndicator, Image, Alert } from "react-native";
 import { router } from "expo-router";
-import { sendEmailVerification, signOut } from "firebase/auth";
+import { sendEmailVerification, signOut, reload } from "firebase/auth";
 import { auth } from "../../lib/firebase";
 import { colors } from "../../theme/theme";
+import { Ionicons } from '@expo/vector-icons';
 
 export default function VerifyEmailScreen() {
   const [info, setInfo] = useState("");
@@ -16,7 +17,7 @@ export default function VerifyEmailScreen() {
   const canResend = useMemo(() => !busy && cooldown <= 0, [busy, cooldown]);
 
   const tickCooldown = () => {
-    let s = 15;
+    let s = 30;
     setCooldown(s);
     const id = setInterval(() => {
       s -= 1;
@@ -52,14 +53,10 @@ export default function VerifyEmailScreen() {
 
     try {
       setBusy(true);
-      // Forzar recarga del usuario para obtener el estado actualizado de emailVerified
-      await user.reload();
+      await reload(user);
       
-      // Obtener la instancia actualizada después del reload
-      const updatedUser = auth.currentUser;
-
-      if (updatedUser?.emailVerified) {
-        // Redirigir a la home principal
+      if (auth.currentUser?.emailVerified) {
+        // Redirigir a la home principal (AuthGate se encargará del resto)
         router.replace("/(tabs)/home");
       } else {
         setInfo("Aún no verificado. Si acabas de verificar, espera unos segundos y pulsa de nuevo.");
@@ -83,14 +80,28 @@ export default function VerifyEmailScreen() {
 
   return (
     <View style={styles.container}>
-      <Text style={styles.title}>Verifica tu correo</Text>
+      <Image 
+        source={require('../../../assets/images/logo.png')} 
+        style={styles.logo}
+        resizeMode="contain"
+      />
+      
+      <Text style={styles.title}>VERIFICA TU EMAIL</Text>
 
       <Text style={styles.description}>
-        Te hemos enviado un email de verificación a {user?.email}. Hasta que lo verifiques, la app queda bloqueada.
+        Hemos enviado un enlace de verificación a: {'\n'}
+        <Text style={styles.emailText}>{user?.email}</Text>
       </Text>
 
       {info ? <Text style={styles.infoText}>{info}</Text> : null}
       {error ? <Text style={styles.errorText}>{error}</Text> : null}
+
+      <View style={styles.infoBox}>
+        <Ionicons name="information-circle-outline" size={24} color={colors.primary} />
+        <Text style={styles.infoBoxText}>
+          Si no lo encuentras, revisa tu carpeta de correo no deseado o spam.
+        </Text>
+      </View>
 
       <TouchableOpacity
         onPress={refresh}
@@ -100,7 +111,7 @@ export default function VerifyEmailScreen() {
         {busy ? (
           <ActivityIndicator color="#000" />
         ) : (
-          <Text style={styles.primaryButtonText}>Ya lo he verificado</Text>
+          <Text style={styles.primaryButtonText}>YA LO HE VERIFICADO</Text>
         )}
       </TouchableOpacity>
 
@@ -110,7 +121,7 @@ export default function VerifyEmailScreen() {
         style={[styles.secondaryButton, !canResend && { opacity: 0.6 }]}
       >
         <Text style={styles.secondaryButtonText}>
-          {cooldown > 0 ? `Reenviar (${cooldown}s)` : "Reenviar email"}
+          {cooldown > 0 ? `REENVIAR (${cooldown}s)` : "REENVIAR EMAIL"}
         </Text>
       </TouchableOpacity>
 
@@ -122,72 +133,19 @@ export default function VerifyEmailScreen() {
 }
 
 const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    padding: 24,
-    justifyContent: "center",
-    backgroundColor: "#FFF",
-  },
-  title: {
-    fontFamily: "Anton",
-    fontSize: 32,
-    color: "#000",
-    marginBottom: 16,
-    textAlign: "center",
-  },
-  description: {
-    fontFamily: "Anton",
-    fontSize: 16,
-    color: "#666",
-    marginBottom: 24,
-    textAlign: "center",
-    lineHeight: 22,
-  },
-  infoText: {
-    fontFamily: "Anton",
-    color: "green",
-    marginBottom: 12,
-    textAlign: "center",
-  },
-  errorText: {
-    fontFamily: "Anton",
-    color: "red",
-    marginBottom: 12,
-    textAlign: "center",
-  },
-  primaryButton: {
-    backgroundColor: colors.primary,
-    borderRadius: 12,
-    paddingVertical: 16,
-    alignItems: "center",
-    marginBottom: 12,
-    elevation: 2,
-  },
-  primaryButtonText: {
-    fontFamily: "Anton",
-    fontSize: 18,
-    color: "#000",
-  },
-  secondaryButton: {
-    borderWidth: 2,
-    borderColor: colors.primary,
-    borderRadius: 12,
-    paddingVertical: 16,
-    alignItems: "center",
-    marginBottom: 24,
-  },
-  secondaryButtonText: {
-    fontFamily: "Anton",
-    fontSize: 16,
-    color: colors.primary,
-  },
-  logoutButton: {
-    alignItems: "center",
-  },
-  logoutButtonText: {
-    fontFamily: "Anton",
-    color: "#999",
-    fontSize: 14,
-    textDecorationLine: "underline",
-  },
+  container: { flex: 1, padding: 24, justifyContent: "center", alignItems: 'center', backgroundColor: "#FFF" },
+  logo: { width: 100, height: 100, marginBottom: 20 },
+  title: { fontFamily: "Anton", fontSize: 28, color: "#000", marginBottom: 16, textAlign: "center" },
+  description: { fontFamily: "Anton", fontSize: 16, color: "#666", marginBottom: 24, textAlign: "center", lineHeight: 22 },
+  emailText: { color: '#000', fontSize: 18 },
+  infoBox: { flexDirection: 'row', backgroundColor: '#F8F8F8', padding: 15, borderRadius: 12, alignItems: 'center', marginBottom: 30 },
+  infoBoxText: { flex: 1, fontSize: 14, color: '#666', marginLeft: 10 },
+  infoText: { fontFamily: "Anton", color: "green", marginBottom: 12, textAlign: "center" },
+  errorText: { fontFamily: "Anton", color: "red", marginBottom: 12, textAlign: "center" },
+  primaryButton: { backgroundColor: colors.primary, width: '100%', borderRadius: 12, paddingVertical: 16, alignItems: "center", marginBottom: 12, elevation: 2 },
+  primaryButtonText: { fontFamily: "Anton", fontSize: 18, color: "#000" },
+  secondaryButton: { width: '100%', borderWidth: 2, borderColor: colors.primary, borderRadius: 12, paddingVertical: 16, alignItems: "center", marginBottom: 24 },
+  secondaryButtonText: { fontFamily: "Anton", fontSize: 16, color: colors.primary },
+  logoutButton: { alignItems: "center" },
+  logoutButtonText: { fontFamily: "Anton", color: "#999", fontSize: 14, textDecorationLine: "underline" },
 });

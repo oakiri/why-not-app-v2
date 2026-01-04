@@ -80,12 +80,17 @@ export default function ProfileScreen() {
   }, [ref, user]);
 
   const validateForm = () => {
-    if (!formData.name.trim() || !formData.phone.trim() || !formData.address.trim() || !formData.postalCode.trim()) {
+    const { name, phone, address, postalCode } = formData;
+    if (!name.trim() || !phone.trim() || !address.trim() || !postalCode.trim()) {
       Alert.alert('Error', 'Por favor, rellena todos los campos obligatorios.');
       return false;
     }
-    if (formData.phone.trim().length !== 9) {
+    if (phone.trim().length !== 9) {
       Alert.alert('Error', 'El teléfono debe tener 9 dígitos.');
+      return false;
+    }
+    if (postalCode.trim().length !== 5) {
+      Alert.alert('Error', 'El código postal debe tener 5 dígitos.');
       return false;
     }
     return true;
@@ -133,12 +138,12 @@ export default function ProfileScreen() {
 
   const handleDeleteAccount = () => {
     Alert.alert(
-      "Eliminar cuenta",
+      "ELIMINAR CUENTA",
       "¿Estás seguro? Esta acción no se puede deshacer y perderás todos tus datos y puntos.",
       [
-        { text: "Cancelar", style: "cancel" },
+        { text: "CANCELAR", style: "cancel" },
         { 
-          text: "Eliminar", 
+          text: "ELIMINAR", 
           style: "destructive",
           onPress: async () => {
             try {
@@ -150,7 +155,7 @@ export default function ProfileScreen() {
                 router.replace("/(auth)/login");
               }
             } catch (e) {
-              Alert.alert("Error", "Por seguridad, cierra sesión e inicia de nuevo antes de eliminar tu cuenta.");
+              Alert.alert("ERROR", "Por seguridad, cierra sesión e inicia de nuevo antes de eliminar tu cuenta.");
             } finally {
               setLoading(false);
             }
@@ -177,14 +182,14 @@ export default function ProfileScreen() {
           <Text style={styles.label}>Email</Text>
           <TextInput value={user?.email} editable={false} style={[styles.input, styles.disabledInput]} />
 
-          <Text style={styles.label}>Nombre</Text>
+          <Text style={styles.label}>Nombre completo</Text>
           <TextInput
             value={formData.name}
             onChangeText={(t) => setFormData({...formData, name: t})}
             style={styles.input}
           />
 
-          <Text style={styles.label}>Teléfono</Text>
+          <Text style={styles.label}>Teléfono (9 dígitos)</Text>
           <TextInput
             value={formData.phone}
             onChangeText={(t) => setFormData({...formData, phone: t})}
@@ -193,7 +198,7 @@ export default function ProfileScreen() {
             style={styles.input}
           />
 
-          <Text style={styles.label}>Dirección</Text>
+          <Text style={styles.label}>Dirección de entrega</Text>
           <TextInput
             value={formData.address}
             onChangeText={(t) => setFormData({...formData, address: t})}
@@ -206,6 +211,7 @@ export default function ProfileScreen() {
                 selectedValue={formData.city}
                 onValueChange={(v) => setFormData({ ...formData, city: v })}
                 style={{ height: 50 }}
+                itemStyle={{ fontFamily: 'Anton', fontSize: 16 }}
               >
                 <Picker.Item label="Jerez de la Frontera" value="Jerez de la Frontera" />
               </Picker>
@@ -225,12 +231,13 @@ export default function ProfileScreen() {
               selectedValue={formData.province}
               onValueChange={(v) => setFormData({ ...formData, province: v })}
               style={{ height: 50 }}
+              itemStyle={{ fontFamily: 'Anton', fontSize: 16 }}
             >
               <Picker.Item label="Cádiz" value="Cádiz" />
             </Picker>
           </View>
 
-          <Text style={styles.label}>Rol</Text>
+          <Text style={styles.label}>Rol de usuario</Text>
           <TextInput value={formData.role.toUpperCase()} editable={false} style={[styles.input, styles.disabledInput]} />
         </View>
 

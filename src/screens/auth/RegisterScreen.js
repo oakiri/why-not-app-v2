@@ -68,6 +68,11 @@ export default function RegisterScreen() {
       return false;
     }
 
+    if (postalCode.trim().length !== 5) {
+      Alert.alert('Error', 'El código postal debe tener 5 dígitos.');
+      return false;
+    }
+
     return true;
   };
 
@@ -119,9 +124,8 @@ export default function RegisterScreen() {
           showsVerticalScrollIndicator={false}
           contentContainerStyle={{ paddingBottom: 40 }}
         >
-          <Text style={styles.title}>Crear cuenta</Text>
+          <Text style={styles.title}>CREAR CUENTA</Text>
 
-          {/* Grupo 1: Usuario y Contraseña */}
           <View style={styles.section}>
             <Text style={styles.sectionLabel}>Datos de acceso</Text>
             <TextInput
@@ -163,7 +167,6 @@ export default function RegisterScreen() {
             </View>
           </View>
 
-          {/* Grupo 2: Datos Personales */}
           <View style={styles.section}>
             <Text style={styles.sectionLabel}>Datos personales</Text>
             <TextInput
@@ -184,7 +187,6 @@ export default function RegisterScreen() {
             />
           </View>
 
-          {/* Grupo 3: Dirección */}
           <View style={styles.section}>
             <Text style={styles.sectionLabel}>Dirección de entrega</Text>
             <TextInput
@@ -201,6 +203,7 @@ export default function RegisterScreen() {
                   selectedValue={formData.city}
                   onValueChange={(v) => setFormData({ ...formData, city: v })}
                   style={{ height: 50 }}
+                  itemStyle={{ fontFamily: 'Anton', fontSize: 16 }}
                 >
                   <Picker.Item label="Jerez de la Frontera" value="Jerez de la Frontera" />
                 </Picker>
@@ -221,6 +224,7 @@ export default function RegisterScreen() {
                 selectedValue={formData.province}
                 onValueChange={(v) => setFormData({ ...formData, province: v })}
                 style={{ height: 50 }}
+                itemStyle={{ fontFamily: 'Anton', fontSize: 16 }}
               >
                 <Picker.Item label="Cádiz" value="Cádiz" />
               </Picker>
@@ -232,7 +236,7 @@ export default function RegisterScreen() {
             disabled={loading}
             style={styles.button}
           >
-            {loading ? <ActivityIndicator color="#000" /> : <Text style={styles.buttonText}>Crear cuenta</Text>}
+            {loading ? <ActivityIndicator color="#000" /> : <Text style={styles.buttonText}>CREAR CUENTA</Text>}
           </TouchableOpacity>
 
           <TouchableOpacity onPress={() => router.replace('/(auth)/login')}>
