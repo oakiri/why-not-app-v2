@@ -1,0 +1,150 @@
+rules_version = '2';
+
+service firebase.storage {
+  match /b/{bucket}/o {
+    
+    // Helper functions
+    function isAuthenticated() {
+      return request.auth != null;
+    }
+    
+    function isOwner(userId) {
+      return request.auth.uid == userId;
+    }
+    
+    function isEmployee() {
+      return request.auth.token.role in ['employee', 'admin'];
+    }
+    
+    function isAdmin() {
+      return request.auth.token.role == 'admin';
+    }
+    
+    function isImage() {
+      return request.resource.contentType.matches('image/.*');
+    }
+    
+    function isUnder5MB() {
+      return request.resource.size < 5 * 1024 * 1024;
+    }
+    
+    function isUnder10MB() {
+      return request.resource.size < 10 * 1024 * 1024;
+    }
+    
+    // User profile images
+    match /users/{userId}/profile/{fileName} {
+      // Users can read any profile image
+      allow read: if true;
+      
+      // Users can upload their own profile image
+      allow write: if isOwner(userId) && isImage() && isUnder5MB();
+      
+      // Users can delete their own profile image
+      allow delete: if isOwner(userId);
+    }
+    
+    // Menu item images
+    match /menu/{itemId}/{fileName} {
+      // Everyone can read menu images
+      allow read: if true;
+      
+      // Only employees can upload menu images
+      allow write: if isEmployee() && isImage() && isUnder10MB();
+      
+      // Only employees can delete menu images
+      allow delete: if isEmployee();
+    }
+    
+    // Category images
+    match /categories/{categoryId}/{fileName} {
+      // Everyone can read category images
+      allow read: if true;
+      
+      // Only employees can manage category images
+      allow write, delete: if isEmployee() && isImage() && isUnder5MB();
+    }
+    
+    // Order receipts/invoices
+    match /orders/{orderId}/receipt.pdf {
+      // Users can read their own receipts
+      allow read: if isAuthenticated();
+      
+      // Only system (via Cloud Functions) can create receipts
+      allow write: if false;
+    }
+    
+    // Review images
+    match /reviews/{reviewId}/{fileName} {
+      // Everyone can read review images
+      allow read: if true;
+      
+      // Authenticated users can upload review images
+      allow write: if isAuthenticated() && isImage() && isUnder5MB();
+      
+      // Users can delete their own review images
+      allow delete: if isAuthenticated();
+    }
+    
+    // Promotion banners
+    match /promotions/{promotionId}/{fileName} {
+      // Everyone can read promotion banners
+      allow read: if true;
+      
+      // Only employees can manage promotion banners
+      allow write, delete: if isEmployee() && isImage() && isUnder10MB();
+    }
+    
+    // Restaurant images (gallery)
+    match /restaurant/gallery/{fileName} {
+      // Everyone can read restaurant images
+      allow read: if true;
+      
+      // Only employees can manage restaurant images
+      allow write, delete: if isEmployee() && isImage() && isUnder10MB();
+    }
+    
+    // Temporary uploads (for processing)
+    match /temp/{userId}/{fileName} {
+      // Users can upload to their temp folder
+      allow write: if isOwner(userId) && isUnder10MB();
+      
+      // Users can read their temp files
+      allow read: if isOwner(userId);
+      
+      // Users can delete their temp files
+      allow delete: if isOwner(userId);
+      
+      // Auto-delete temp files after 24 hours (handled by Cloud Function)
+    }
+    
+    // Documents (PDFs, etc.)
+    match /documents/{type}/{fileName} {
+      // Everyone can read public documents (menu PDFs, etc.)
+      allow read: if true;
+      
+      // Only admins can upload documents
+      allow write: if isAdmin() && isUnder10MB();
+      
+      // Only admins can delete documents
+      allow delete: if isAdmin();
+    }
+    
+    // Backoffice reports
+    match /reports/{reportId}/{fileName} {
+      // Only employees can read reports
+      allow read: if isEmployee();
+      
+      // Only system can create reports
+      allow write: if false;
+      
+      // Only admins can delete reports
+      allow delete: if isAdmin();
+    }
+    
+    // Default deny all other paths
+    match /{allPaths=**} {
+      allow read, write: if false;
+    }
+  }
+}

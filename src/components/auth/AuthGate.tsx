@@ -4,25 +4,28 @@ import { useAuth } from '../../context/AuthContext';
 
 const AUTH_GROUP = '(auth)';
 const TABS_GROUP = '(tabs)';
+const BACKOFFICE_GROUP = '(backoffice)';
 
 // Rutas públicas dentro de (auth)
 const PUBLIC_AUTH_ROUTES = new Set(['login', 'register', 'forgot-password', 'verify-email']);
 
 export default function AuthGate({ children }: { children?: React.ReactNode }) {
-  const { user, isReady, isVerified } = useAuth();
+  const { user, isReady, isVerified, profile, profileLoading } = useAuth();
   const segments = useSegments();
   const rootNavState = useRootNavigationState();
 
   const isRouterReady = useMemo(() => !!rootNavState?.key, [rootNavState?.key]);
 
   useEffect(() => {
-    if (!isRouterReady || !isReady) return;
+    // Esperar a que el router, la auth y el perfil estén listos
+    if (!isRouterReady || !isReady || profileLoading) return;
 
-    const group = segments[0];          // '(auth)' o '(tabs)' o undefined
+    const group = segments[0];          // '(auth)', '(tabs)', '(backoffice)' o undefined
     const route = segments[1] || '';    // login/register/...
 
     const inAuth = group === AUTH_GROUP;
     const inTabs = group === TABS_GROUP;
+    const inBackoffice = group === BACKOFFICE_GROUP;
 
     // 1) No logado -> siempre a login (salvo si está ya en una pública)
     if (!user) {
@@ -33,24 +36,31 @@ export default function AuthGate({ children }: { children?: React.ReactNode }) {
     }
 
     // 2) Logado pero NO verificado -> siempre a verify-email
-    if (!isVerified) {
+    // Nota: Firebase a veces tarda un segundo en actualizar emailVerified tras el reload,
+    // por eso es importante que el usuario pulse el botón "Ya lo he verificado" que fuerza el reload.
+    if (!user.emailVerified) {
       if (!(inAuth && route === 'verify-email')) {
         router.replace('/(auth)/verify-email');
       }
       return;
     }
 
-    // 3) Logado + verificado -> siempre a tabs (si está en auth, lo sacamos)
-    if (inAuth) {
-      router.replace('/(tabs)/home');
-      return;
+    // 3) Logado + verificado -> Redirigir según ROL
+    const userRole = profile?.role || 'cliente';
+
+    if (userRole === 'empleado' || userRole === 'admin') {
+      // Empleados/Admins van al Backoffice
+      if (!inBackoffice) {
+        router.replace('/(backoffice)/dashboard');
+      }
+    } else {
+      // Clientes van a las Tabs normales
+      if (!inTabs || inAuth) {
+        router.replace('/(tabs)/home');
+      }
     }
 
-    // 4) Si no está en tabs, lo llevamos a tabs/home
-    if (!inTabs) {
-      router.replace('/(tabs)/home');
-    }
-  }, [isRouterReady, isReady, user, isVerified, segments]);
+  }, [isRouterReady, isReady, user, isVerified, segments, profile, profileLoading]);
 
   // IMPORTANTE: renderizar siempre Slot para que Root Layout esté montado
   return children ? <>{children}</> : <Slot />;

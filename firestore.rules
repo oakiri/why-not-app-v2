@@ -1,0 +1,232 @@
+rules_version = '2';
+
+service cloud.firestore {
+  match /databases/{database}/documents {
+    
+    // Helper functions
+    function isAuthenticated() {
+      return request.auth != null;
+    }
+    
+    function isOwner(userId) {
+      return isAuthenticated() && request.auth.uid == userId;
+    }
+    
+    function isEmployee() {
+      return isAuthenticated() && 
+             get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role in ['employee', 'admin'];
+    }
+    
+    function isAdmin() {
+      return isAuthenticated() && 
+             get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'admin';
+    }
+    
+    // Users collection
+    match /users/{userId} {
+      // Users can read their own data
+      allow read: if isOwner(userId) || isEmployee();
+      
+      // Users can create their own profile on signup
+      allow create: if isOwner(userId) && 
+                      request.resource.data.role == 'customer' &&
+                      request.resource.data.uid == userId;
+      
+      // Users can update their own data (except role)
+      allow update: if isOwner(userId) && 
+                      request.resource.data.role == resource.data.role;
+      
+      // Only admins can update roles
+      allow update: if isAdmin();
+      
+      // Only admins can delete users
+      allow delete: if isAdmin();
+    }
+    
+    // Menu Items collection
+    match /menuItems/{itemId} {
+      // Everyone can read menu items (even unauthenticated for public menu)
+      allow read: if true;
+      
+      // Only employees can create, update, delete menu items
+      allow create, update, delete: if isEmployee();
+    }
+    
+    // Categories collection
+    match /categories/{categoryId} {
+      // Everyone can read categories
+      allow read: if true;
+      
+      // Only employees can manage categories
+      allow create, update, delete: if isEmployee();
+    }
+    
+    // Orders collection
+    match /orders/{orderId} {
+      // Users can read their own orders
+      allow read: if isOwner(resource.data.userId) || isEmployee();
+      
+      // Users can create orders for themselves
+      allow create: if isAuthenticated() && 
+                      request.resource.data.userId == request.auth.uid &&
+                      request.resource.data.status == 'pending';
+      
+      // Users can update their own pending orders (cancel only)
+      allow update: if isOwner(resource.data.userId) && 
+                      resource.data.status == 'pending' &&
+                      request.resource.data.status == 'cancelled';
+      
+      // Employees can update any order
+      allow update: if isEmployee();
+      
+      // Only admins can delete orders
+      allow delete: if isAdmin();
+    }
+    
+    // Reservations collection
+    match /reservations/{reservationId} {
+      // Users can read their own reservations
+      allow read: if isOwner(resource.data.userId) || isEmployee();
+      
+      // Users can create reservations for themselves
+      allow create: if isAuthenticated() && 
+                      request.resource.data.userId == request.auth.uid &&
+                      request.resource.data.status == 'pending';
+      
+      // Users can cancel their own reservations
+      allow update: if isOwner(resource.data.userId) && 
+                      request.resource.data.status == 'cancelled';
+      
+      // Employees can manage all reservations
+      allow update, delete: if isEmployee();
+    }
+    
+    // Reviews collection
+    match /reviews/{reviewId} {
+      // Everyone can read reviews
+      allow read: if true;
+      
+      // Authenticated users can create reviews
+      allow create: if isAuthenticated() && 
+                      request.resource.data.userId == request.auth.uid;
+      
+      // Users can update/delete their own reviews
+      allow update, delete: if isOwner(resource.data.userId);
+      
+      // Employees can delete any review
+      allow delete: if isEmployee();
+    }
+    
+    // Loyalty Points collection
+    match /loyaltyPoints/{userId} {
+      // Users can read their own points
+      allow read: if isOwner(userId) || isEmployee();
+      
+      // Only employees can create/update loyalty points
+      allow create, update: if isEmployee();
+      
+      // Only admins can delete loyalty points
+      allow delete: if isAdmin();
+    }
+    
+    // Notifications collection
+    match /notifications/{notificationId} {
+      // Users can read their own notifications
+      allow read: if isOwner(resource.data.userId);
+      
+      // System/employees can create notifications
+      allow create: if isEmployee();
+      
+      // Users can mark their notifications as read
+      allow update: if isOwner(resource.data.userId) && 
+                      request.resource.data.read == true;
+      
+      // Users can delete their own notifications
+      allow delete: if isOwner(resource.data.userId);
+    }
+    
+    // Settings collection (app configuration)
+    match /settings/{settingId} {
+      // Everyone can read public settings
+      allow read: if true;
+      
+      // Only admins can update settings
+      allow create, update, delete: if isAdmin();
+    }
+    
+    // Analytics collection (for backoffice)
+    match /analytics/{docId} {
+      // Only employees can read analytics
+      allow read: if isEmployee();
+      
+      // Only system can write analytics (via Cloud Functions)
+      allow write: if false;
+    }
+    
+    // TPV Configuration (sensitive data)
+    match /tpvConfig/{configId} {
+      // Only admins can read/write TPV config
+      allow read, write: if isAdmin();
+    }
+    
+    // Inventory/Stock
+    match /inventory/{itemId} {
+      // Employees can read inventory
+      allow read: if isEmployee();
+      
+      // Employees can update inventory
+      allow update: if isEmployee();
+      
+      // Only admins can create/delete inventory items
+      allow create, delete: if isAdmin();
+    }
+    
+    // Tables (for dine-in reservations)
+    match /tables/{tableId} {
+      // Everyone can read available tables
+      allow read: if true;
+      
+      // Only employees can manage tables
+      allow create, update, delete: if isEmployee();
+    }
+    
+    // Promotions/Discounts
+    match /promotions/{promotionId} {
+      // Everyone can read active promotions
+      allow read: if true;
+      
+      // Only employees can manage promotions
+      allow create, update, delete: if isEmployee();
+    }
+    
+    // Delivery Zones
+    match /deliveryZones/{zoneId} {
+      // Everyone can read delivery zones
+      allow read: if true;
+      
+      // Only employees can manage delivery zones
+      allow create, update, delete: if isEmployee();
+    }
+    
+    // Chat/Support Messages
+    match /supportChats/{chatId} {
+      // Users can read their own chats
+      allow read: if isOwner(resource.data.userId) || isEmployee();
+      
+      // Users can create chats
+      allow create: if isAuthenticated() && 
+                      request.resource.data.userId == request.auth.uid;
+      
+      // Users and employees can add messages to chats
+      allow update: if isOwner(resource.data.userId) || isEmployee();
+      
+      // Only admins can delete chats
+      allow delete: if isAdmin();
+    }
+    
+    // Default deny all other collections
+    match /{document=**} {
+      allow read, write: if false;
+    }
+  }
+}
