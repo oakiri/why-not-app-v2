@@ -13,7 +13,7 @@ import {
 } from "react-native";
 import { router } from "expo-router";
 import { signOut, deleteUser } from "firebase/auth";
-import { doc, getDoc, setDoc, deleteDoc } from "firebase/firestore";
+import { doc, setDoc, deleteDoc } from "firebase/firestore";
 import { Ionicons } from '@expo/vector-icons';
 
 import { auth, db } from "../../lib/firebase";
@@ -214,12 +214,15 @@ export default function ProfileScreen() {
             style={{ marginBottom: 16 }}
           />
 
-          <View style={styles.inputGroup}>
-            <Text style={styles.label}>Rol de usuario</Text>
-            <View style={[styles.inputWrapper, styles.disabledInput]}>
-              <Text style={[styles.input, { color: '#999' }]}>{formData.role.toUpperCase()}</Text>
-            </View>
-          </View>
+          {(formData.role === 'master' || formData.role === 'employee') && (
+            <TouchableOpacity 
+              style={styles.adminSwitchButton}
+              onPress={() => router.replace("/(auth)/role-selector")}
+            >
+              <Ionicons name="settings-outline" size={20} color="#000" />
+              <Text style={styles.adminSwitchText}>IR AL PANEL DE CONTROL</Text>
+            </TouchableOpacity>
+          )}
         </View>
 
         <TouchableOpacity onPress={save} disabled={saving} style={[styles.primaryButton, saving && styles.buttonDisabled]}>
@@ -261,4 +264,16 @@ const styles = StyleSheet.create({
   secondaryButtonText: { fontFamily: "Anton", fontSize: 16, color: colors.primary },
   deleteButton: { flexDirection: "row", alignItems: "center", justifyContent: "center", paddingVertical: 12 },
   deleteButtonText: { fontFamily: "Anton", color: "#FF4444", fontSize: 14, marginLeft: 8, textDecorationLine: "underline" },
+  adminSwitchButton: { 
+    flexDirection: 'row', 
+    alignItems: 'center', 
+    justifyContent: 'center', 
+    backgroundColor: '#F0F0F0', 
+    padding: 15, 
+    borderRadius: 12, 
+    marginTop: 10,
+    borderWidth: 1,
+    borderColor: '#DDD'
+  },
+  adminSwitchText: { fontFamily: "Anton", fontSize: 14, color: "#000", marginLeft: 10 },
 });

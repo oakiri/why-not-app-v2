@@ -37,14 +37,19 @@ export default function DashboardScreen() {
 
   useEffect(() => {
     const unsubscribe = subscribeToPendingOrders((orders) => {
-      setPendingOrders(orders);
-      setStats(prev => ({
-        ...prev,
-        pendingOrders: orders.length,
-        todayOrders: orders.length + 15, // Mock data for today
-        todayRevenue: orders.reduce((sum, o) => sum + (o.total || 0), 0) + 450,
-      }));
-      setLoading(false);
+      try {
+        setPendingOrders(orders || []);
+        setStats(prev => ({
+          ...prev,
+          pendingOrders: orders?.length || 0,
+          todayOrders: (orders?.length || 0) + 15, // Mock data for today
+          todayRevenue: (orders || []).reduce((sum, o) => sum + (o.total || 0), 0) + 450,
+        }));
+      } catch (error) {
+        console.error("Error in dashboard subscription:", error);
+      } finally {
+        setLoading(false);
+      }
     });
 
     return () => unsubscribe();
@@ -80,21 +85,26 @@ export default function DashboardScreen() {
     <SafeAreaView style={styles.container} edges={['top']}>
       <View style={styles.header}>
         <View>
-          <Text style={styles.headerTitle}>Panel de Control</Text>
+          <Text style={styles.headerTitle}>PANEL DE CONTROL</Text>
           <View style={[styles.roleBadge, { backgroundColor: isMaster ? '#FFD700' : COLORS.primary }]}>
             <Text style={styles.roleText}>{profile?.role?.toUpperCase()}</Text>
           </View>
         </View>
-        <TouchableOpacity onPress={() => auth.signOut()} style={styles.logoutButton}>
-          <Ionicons name="log-out-outline" size={24} color={COLORS.text} />
-        </TouchableOpacity>
+        <View style={{ flexDirection: 'row', gap: 15 }}>
+          <TouchableOpacity onPress={() => router.replace('/(auth)/role-selector')} style={styles.iconButton}>
+            <Ionicons name="swap-horizontal" size={24} color={COLORS.text} />
+          </TouchableOpacity>
+          <TouchableOpacity onPress={() => auth.signOut()} style={styles.iconButton}>
+            <Ionicons name="log-out-outline" size={24} color={COLORS.text} />
+          </TouchableOpacity>
+        </View>
       </View>
 
       <ScrollView style={styles.content} showsVerticalScrollIndicator={false}>
         {/* Stats Grid */}
         <View style={styles.statsGrid}>
           {renderStatCard('Pedidos Hoy', stats.todayOrders, 'cart-outline', COLORS.primary)}
-          {renderStatCard('Ventas Hoy', `${stats.todayRevenue.toFixed(0)}€`, 'cash-outline', COLORS.success)}
+          {renderStatCard('Ventas Hoy', `${(stats.todayRevenue || 0).toFixed(0)}€`, 'cash-outline', COLORS.success)}
           {renderStatCard('Pendientes', stats.pendingOrders, 'time-outline', COLORS.warning)}
           {renderStatCard('Reservas', 4, 'calendar-outline', COLORS.info)}
         </View>
@@ -162,7 +172,7 @@ const styles = StyleSheet.create({
   headerTitle: { fontSize: 20, fontFamily: 'Anton', color: COLORS.text },
   roleBadge: { alignSelf: 'flex-start', paddingHorizontal: 8, paddingVertical: 2, borderRadius: 4, marginTop: 2 },
   roleText: { fontSize: 10, fontWeight: 'bold', color: '#000' },
-  logoutButton: { padding: 8 },
+  iconButton: { padding: 8 },
   content: { flex: 1, padding: 16 },
   statsGrid: { flexDirection: 'row', flexWrap: 'wrap', gap: 12, marginBottom: 24 },
   statCard: { width: (width - 44) / 2, backgroundColor: COLORS.white, padding: 16, borderRadius: 16, flexDirection: 'row', alignItems: 'center', gap: 12, elevation: 2, shadowColor: '#000', shadowOffset: { width: 0, height: 2 }, shadowOpacity: 0.1, shadowRadius: 4 },
