@@ -60,7 +60,7 @@ export default function ForgotPasswordScreen() {
 
       <View style={styles.content}>
         <Image 
-          source={require('../../../assets/images/logo.png')} 
+          source={require('../../../assets/logo.png')} 
           style={styles.logo}
           resizeMode="contain"
         />
@@ -96,7 +96,7 @@ const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: '#FFF' },
   backButton: { padding: 20, marginTop: Platform.OS === 'ios' ? 40 : 20 },
   content: { flex: 1, padding: 30, alignItems: 'center', justifyContent: 'center' },
-  logo: { width: 100, height: 100, marginBottom: 20 },
+  logo: { width: 120, height: 120, marginBottom: 20 },
   title: { fontFamily: 'Anton', fontSize: 28, color: '#000', marginBottom: 15, textAlign: 'center' },
   description: { fontSize: 16, color: '#666', textAlign: 'center', lineHeight: 22, marginBottom: 30 },
   input: { width: '100%', fontFamily: 'Anton', backgroundColor: '#F8F8F8', borderWidth: 1, borderColor: '#EEE', borderRadius: 12, padding: 15, fontSize: 16, marginBottom: 20 },

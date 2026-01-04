@@ -56,7 +56,6 @@ export default function VerifyEmailScreen() {
       await reload(user);
       
       if (auth.currentUser?.emailVerified) {
-        // Redirigir a la home principal (AuthGate se encargará del resto)
         router.replace("/(tabs)/home");
       } else {
         setInfo("Aún no verificado. Si acabas de verificar, espera unos segundos y pulsa de nuevo.");
@@ -81,7 +80,7 @@ export default function VerifyEmailScreen() {
   return (
     <View style={styles.container}>
       <Image 
-        source={require('../../../assets/images/logo.png')} 
+        source={require('../../../assets/logo.png')} 
         style={styles.logo}
         resizeMode="contain"
       />
@@ -134,7 +133,7 @@ export default function VerifyEmailScreen() {
 
 const styles = StyleSheet.create({
   container: { flex: 1, padding: 24, justifyContent: "center", alignItems: 'center', backgroundColor: "#FFF" },
-  logo: { width: 100, height: 100, marginBottom: 20 },
+  logo: { width: 120, height: 120, marginBottom: 20 },
   title: { fontFamily: "Anton", fontSize: 28, color: "#000", marginBottom: 16, textAlign: "center" },
   description: { fontFamily: "Anton", fontSize: 16, color: "#666", marginBottom: 24, textAlign: "center", lineHeight: 22 },
   emailText: { color: '#000', fontSize: 18 },
