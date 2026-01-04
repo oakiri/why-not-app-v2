@@ -71,13 +71,17 @@ export default function RegisterScreen() {
       return false;
     }
 
-    if (phone.trim().length !== 9) {
-      Alert.alert('Error', 'El teléfono debe tener 9 dígitos.');
+    // Validación estricta de teléfono (9 dígitos)
+    const phoneClean = phone.trim();
+    if (phoneClean.length !== 9 || isNaN(Number(phoneClean))) {
+      Alert.alert('Error', 'El teléfono debe tener exactamente 9 dígitos numéricos.');
       return false;
     }
 
-    if (postalCode.trim().length !== 5) {
-      Alert.alert('Error', 'El código postal debe tener 5 dígitos.');
+    // Validación estricta de CP (5 dígitos)
+    const cpClean = postalCode.trim();
+    if (cpClean.length !== 5 || isNaN(Number(cpClean))) {
+      Alert.alert('Error', 'El código postal debe tener exactamente 5 dígitos numéricos.');
       return false;
     }
 
@@ -254,7 +258,7 @@ const styles = StyleSheet.create({
   title: { fontFamily: 'Anton', fontSize: 32, marginBottom: 24, color: '#000', textAlign: 'center' },
   section: { marginBottom: 20 },
   sectionLabel: { fontFamily: 'Anton', fontSize: 14, color: colors.primary, marginBottom: 8, textTransform: 'uppercase' },
-  input: { fontFamily: 'Anton', borderWidth: 1, borderColor: '#DDD', borderRadius: 12, paddingHorizontal: 15, paddingVertical: 12, marginBottom: 12, backgroundColor: '#FFF', fontSize: 16 },
+  input: { fontFamily: 'Anton', borderWidth: 1, borderColor: '#DDD', borderRadius: 12, paddingHorizontal: 15, paddingVertical: 12, marginBottom: 12, backgroundColor: '#FFF', fontSize: 16, color: '#000' },
   passwordContainer: { flexDirection: 'row', alignItems: 'center' },
   eyeIcon: { position: 'absolute', right: 15, height: '100%', justifyContent: 'center' },
   button: { backgroundColor: colors.primary, borderRadius: 12, paddingVertical: 16, alignItems: 'center', marginBottom: 20, elevation: 3, shadowColor: '#000', shadowOffset: { width: 0, height: 2 }, shadowOpacity: 0.2, shadowRadius: 4 },

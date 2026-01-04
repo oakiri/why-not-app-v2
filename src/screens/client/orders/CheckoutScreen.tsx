@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState } from 'react';
 import {
   View,
   Text,
@@ -11,42 +11,43 @@ import {
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
-import { useNavigation } from '@react-navigation/native';
-import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
+import { router } from 'expo-router';
 
 import { useCart, useCartActions } from '../../../hooks/useCart';
-import { orderService, userService, addLoyaltyPoints } from '../../../services/firebase.service';
-import { useAuth } from '../../../context/AuthContext';
-import type { RootStackParamList, DeliveryType, PaymentMethod, Order, OrderItem } from '../../../types';
-import { COLORS, DELIVERY_TYPES, PAYMENT_METHODS, ORDER_STATUS, SUCCESS_MESSAGES, ERROR_MESSAGES } from '../../../constants';
+import { auth, db } from '../../../lib/firebase';
+import { addDoc, collection, serverTimestamp } from 'firebase/firestore';
+import { colors } from '../../../theme/theme';
 
-type NavigationProp = NativeStackNavigationProp<RootStackParamList>;
+type DeliveryType = 'pickup' | 'delivery' | 'table';
+type PaymentMethod = 'card' | 'cash';
 
 export default function CheckoutScreen() {
-  const navigation = useNavigation<NavigationProp>();
-  const { user } = useAuth();
   const cart = useCart();
   const { clearCart } = useCartActions();
 
-  const [deliveryType, setDeliveryType] = useState<DeliveryType>(DELIVERY_TYPES.PICKUP);
-  const [paymentMethod, setPaymentMethod] = useState<PaymentMethod>(PAYMENT_METHODS.CARD);
+  const [deliveryType, setDeliveryType] = useState<DeliveryType>('pickup');
+  const [paymentMethod, setPaymentMethod] = useState<PaymentMethod>('card');
   const [address, setAddress] = useState('');
   const [tableNumber, setTableNumber] = useState('');
   const [notes, setNotes] = useState('');
   const [loading, setLoading] = useState(false);
 
+  const deliveryFee = deliveryType === 'delivery' ? 2.50 : 0;
+  const total = cart.total + deliveryFee;
+
   const handlePlaceOrder = async () => {
+    const user = auth.currentUser;
     if (!user) {
       Alert.alert('Error', 'Debes iniciar sesión para realizar un pedido');
       return;
     }
 
-    if (deliveryType === DELIVERY_TYPES.DELIVERY && !address.trim()) {
+    if (deliveryType === 'delivery' && !address.trim()) {
       Alert.alert('Error', 'Por favor, introduce una dirección de entrega');
       return;
     }
 
-    if (deliveryType === DELIVERY_TYPES.DINE_IN && !tableNumber.trim()) {
+    if (deliveryType === 'table' && !tableNumber.trim()) {
       Alert.alert('Error', 'Por favor, introduce el número de mesa');
       return;
     }
@@ -54,51 +55,43 @@ export default function CheckoutScreen() {
     try {
       setLoading(true);
 
-      const orderData: Partial<Order> = {
+      const orderData = {
         userId: user.uid,
-        userName: user.displayName || 'Cliente',
         userEmail: user.email || '',
         items: cart.items.map(item => ({
           id: item.id,
-          itemId: item.itemId,
           name: item.name,
           price: item.price,
           quantity: item.quantity,
-          modifiers: item.modifiers,
-          notes: item.notes,
-          subtotal: item.subtotal,
+          doneness: item.doneness || null,
+          extras: item.extras || []
         })),
-        subtotal: cart.subtotal,
-        tax: cart.tax,
-        discount: cart.discount,
-        deliveryFee: deliveryType === DELIVERY_TYPES.DELIVERY ? cart.deliveryFee : 0,
-        total: cart.total,
-        status: ORDER_STATUS.PENDING,
+        subtotal: cart.total,
+        deliveryFee,
+        total: total,
+        status: 'pending',
         deliveryType,
-        deliveryAddress: deliveryType === DELIVERY_TYPES.DELIVERY ? { street: address, city: '', postalCode: '', country: '' } : undefined,
-        tableNumber: deliveryType === DELIVERY_TYPES.DINE_IN ? tableNumber : undefined,
+        deliveryAddress: deliveryType === 'delivery' ? address : null,
+        tableNumber: deliveryType === 'table' ? tableNumber : null,
         notes,
         paymentMethod,
-        paymentStatus: paymentMethod === PAYMENT_METHODS.ONLINE ? 'paid' : 'pending',
+        createdAt: serverTimestamp(),
+        updatedAt: serverTimestamp()
       };
 
-      const orderId = await orderService.create(orderData);
+      const docRef = await addDoc(collection(db, 'orders'), orderData);
       
-      // Add loyalty points (10 points per euro)
-      const pointsEarned = Math.floor(cart.total * 10);
-      await addLoyaltyPoints(user.uid, pointsEarned, `Pedido #${orderId.substring(0, 5)}`, orderId);
-
       clearCart();
       setLoading(false);
       
-      Alert.alert('¡Éxito!', SUCCESS_MESSAGES.ORDER_CREATED, [
-        { text: 'Ver pedido', onPress: () => navigation.navigate('OrderDetail', { orderId }) },
-        { text: 'Ir a inicio', onPress: () => navigation.navigate('Home') }
+      Alert.alert('¡ÉXITO!', 'Tu pedido ha sido enviado a cocina.', [
+        { text: 'VER PEDIDO', onPress: () => router.replace(`/(tabs)/orders/${docRef.id}`) },
+        { text: 'IR A INICIO', onPress: () => router.replace('/(tabs)/home') }
       ]);
 
     } catch (error) {
       console.error('Error placing order:', error);
-      Alert.alert('Error', ERROR_MESSAGES.SERVER_ERROR);
+      Alert.alert('Error', 'No se pudo procesar el pedido. Inténtalo de nuevo.');
       setLoading(false);
     }
   };
@@ -106,48 +99,46 @@ export default function CheckoutScreen() {
   return (
     <SafeAreaView style={styles.container} edges={['top']}>
       <View style={styles.header}>
-        <TouchableOpacity onPress={() => navigation.goBack()}>
-          <Ionicons name="arrow-back" size={24} color={COLORS.text} />
+        <TouchableOpacity onPress={() => router.back()}>
+          <Ionicons name="arrow-back" size={24} color="#000" />
         </TouchableOpacity>
-        <Text style={styles.headerTitle}>Finalizar Pedido</Text>
+        <Text style={styles.headerTitle}>FINALIZAR PEDIDO</Text>
         <View style={{ width: 24 }} />
       </View>
 
       <ScrollView style={styles.content} showsVerticalScrollIndicator={false}>
-        {/* Delivery Type */}
         <View style={styles.section}>
-          <Text style={styles.sectionTitle}>Método de Entrega</Text>
+          <Text style={styles.sectionTitle}>MÉTODO DE ENTREGA</Text>
           <View style={styles.deliveryOptions}>
             <TouchableOpacity
-              style={[styles.deliveryOption, deliveryType === DELIVERY_TYPES.PICKUP && styles.deliveryOptionActive]}
-              onPress={() => setDeliveryType(DELIVERY_TYPES.PICKUP)}
+              style={[styles.deliveryOption, deliveryType === 'pickup' && styles.deliveryOptionActive]}
+              onPress={() => setDeliveryType('pickup')}
             >
-              <Ionicons name="walk" size={24} color={deliveryType === DELIVERY_TYPES.PICKUP ? COLORS.white : COLORS.text} />
-              <Text style={[styles.deliveryOptionText, deliveryType === DELIVERY_TYPES.PICKUP && styles.deliveryOptionTextActive]}>Recoger</Text>
+              <Ionicons name="walk" size={24} color={deliveryType === 'pickup' ? '#000' : '#666'} />
+              <Text style={[styles.deliveryOptionText, deliveryType === 'pickup' && styles.deliveryOptionTextActive]}>RECOGER</Text>
             </TouchableOpacity>
             
             <TouchableOpacity
-              style={[styles.deliveryOption, deliveryType === DELIVERY_TYPES.DELIVERY && styles.deliveryOptionActive]}
-              onPress={() => setDeliveryType(DELIVERY_TYPES.DELIVERY)}
+              style={[styles.deliveryOption, deliveryType === 'delivery' && styles.deliveryOptionActive]}
+              onPress={() => setDeliveryType('delivery')}
             >
-              <Ionicons name="bicycle" size={24} color={deliveryType === DELIVERY_TYPES.DELIVERY ? COLORS.white : COLORS.text} />
-              <Text style={[styles.deliveryOptionText, deliveryType === DELIVERY_TYPES.DELIVERY && styles.deliveryOptionTextActive]}>Domicilio</Text>
+              <Ionicons name="bicycle" size={24} color={deliveryType === 'delivery' ? '#000' : '#666'} />
+              <Text style={[styles.deliveryOptionText, deliveryType === 'delivery' && styles.deliveryOptionTextActive]}>DOMICILIO</Text>
             </TouchableOpacity>
 
             <TouchableOpacity
-              style={[styles.deliveryOption, deliveryType === DELIVERY_TYPES.DINE_IN && styles.deliveryOptionActive]}
-              onPress={() => setDeliveryType(DELIVERY_TYPES.DINE_IN)}
+              style={[styles.deliveryOption, deliveryType === 'table' && styles.deliveryOptionActive]}
+              onPress={() => setDeliveryType('table')}
             >
-              <Ionicons name="restaurant" size={24} color={deliveryType === DELIVERY_TYPES.DINE_IN ? COLORS.white : COLORS.text} />
-              <Text style={[styles.deliveryOptionText, deliveryType === DELIVERY_TYPES.DINE_IN && styles.deliveryOptionTextActive]}>En mesa</Text>
+              <Ionicons name="restaurant" size={24} color={deliveryType === 'table' ? '#000' : '#666'} />
+              <Text style={[styles.deliveryOptionText, deliveryType === 'table' && styles.deliveryOptionTextActive]}>EN MESA</Text>
             </TouchableOpacity>
           </View>
         </View>
 
-        {/* Conditional Inputs */}
-        {deliveryType === DELIVERY_TYPES.DELIVERY && (
+        {deliveryType === 'delivery' && (
           <View style={styles.section}>
-            <Text style={styles.sectionTitle}>Dirección de Entrega</Text>
+            <Text style={styles.sectionTitle}>DIRECCIÓN DE ENTREGA</Text>
             <TextInput
               style={styles.input}
               placeholder="Introduce tu dirección completa"
@@ -158,9 +149,9 @@ export default function CheckoutScreen() {
           </View>
         )}
 
-        {deliveryType === DELIVERY_TYPES.DINE_IN && (
+        {deliveryType === 'table' && (
           <View style={styles.section}>
-            <Text style={styles.sectionTitle}>Número de Mesa</Text>
+            <Text style={styles.sectionTitle}>NÚMERO DE MESA</Text>
             <TextInput
               style={styles.input}
               placeholder="Ej: 5"
@@ -171,31 +162,29 @@ export default function CheckoutScreen() {
           </View>
         )}
 
-        {/* Payment Method */}
         <View style={styles.section}>
-          <Text style={styles.sectionTitle}>Método de Pago</Text>
+          <Text style={styles.sectionTitle}>MÉTODO DE PAGO</Text>
           <View style={styles.paymentOptions}>
             <TouchableOpacity
-              style={[styles.paymentOption, paymentMethod === PAYMENT_METHODS.CARD && styles.paymentOptionActive]}
-              onPress={() => setPaymentMethod(PAYMENT_METHODS.CARD)}
+              style={[styles.paymentOption, paymentMethod === 'card' && styles.paymentOptionActive]}
+              onPress={() => setPaymentMethod('card')}
             >
-              <Ionicons name="card" size={20} color={paymentMethod === PAYMENT_METHODS.CARD ? COLORS.primary : COLORS.textSecondary} />
-              <Text style={styles.paymentOptionText}>Tarjeta (en local)</Text>
+              <Ionicons name="card" size={20} color={paymentMethod === 'card' ? colors.primary : '#666'} />
+              <Text style={styles.paymentOptionText}>TARJETA (EN LOCAL)</Text>
             </TouchableOpacity>
             
             <TouchableOpacity
-              style={[styles.paymentOption, paymentMethod === PAYMENT_METHODS.CASH && styles.paymentOptionActive]}
-              onPress={() => setPaymentMethod(PAYMENT_METHODS.CASH)}
+              style={[styles.paymentOption, paymentMethod === 'cash' && styles.paymentOptionActive]}
+              onPress={() => setPaymentMethod('cash')}
             >
-              <Ionicons name="cash" size={20} color={paymentMethod === PAYMENT_METHODS.CASH ? COLORS.primary : COLORS.textSecondary} />
-              <Text style={styles.paymentOptionText}>Efectivo</Text>
+              <Ionicons name="cash" size={20} color={paymentMethod === 'cash' ? colors.primary : '#666'} />
+              <Text style={styles.paymentOptionText}>EFECTIVO</Text>
             </TouchableOpacity>
           </View>
         </View>
 
-        {/* Notes */}
         <View style={styles.section}>
-          <Text style={styles.sectionTitle}>Notas adicionales</Text>
+          <Text style={styles.sectionTitle}>NOTAS ADICIONALES</Text>
           <TextInput
             style={[styles.input, { height: 80 }]}
             placeholder="Ej: Sin cebolla, llamar al timbre..."
@@ -205,26 +194,21 @@ export default function CheckoutScreen() {
           />
         </View>
 
-        {/* Summary */}
         <View style={styles.summarySection}>
-          <Text style={styles.sectionTitle}>Resumen</Text>
+          <Text style={styles.sectionTitle}>RESUMEN</Text>
           <View style={styles.summaryRow}>
             <Text style={styles.summaryLabel}>Subtotal</Text>
-            <Text style={styles.summaryValue}>{cart.subtotal.toFixed(2)}€</Text>
+            <Text style={styles.summaryValue}>{cart.total.toFixed(2)}€</Text>
           </View>
-          <View style={styles.summaryRow}>
-            <Text style={styles.summaryLabel}>IVA (10%)</Text>
-            <Text style={styles.summaryValue}>{cart.tax.toFixed(2)}€</Text>
-          </View>
-          {deliveryType === DELIVERY_TYPES.DELIVERY && (
+          {deliveryType === 'delivery' && (
             <View style={styles.summaryRow}>
               <Text style={styles.summaryLabel}>Gastos de envío</Text>
-              <Text style={styles.summaryValue}>{cart.deliveryFee.toFixed(2)}€</Text>
+              <Text style={styles.summaryValue}>{deliveryFee.toFixed(2)}€</Text>
             </View>
           )}
           <View style={[styles.summaryRow, styles.totalRow]}>
-            <Text style={styles.totalLabel}>Total</Text>
-            <Text style={styles.totalValue}>{cart.total.toFixed(2)}€</Text>
+            <Text style={styles.totalLabel}>TOTAL</Text>
+            <Text style={styles.totalValue}>{total.toFixed(2)}€</Text>
           </View>
         </View>
       </ScrollView>
@@ -236,9 +220,9 @@ export default function CheckoutScreen() {
           disabled={loading}
         >
           {loading ? (
-            <ActivityIndicator color={COLORS.white} />
+            <ActivityIndicator color="#000" />
           ) : (
-            <Text style={styles.placeOrderButtonText}>Confirmar Pedido</Text>
+            <Text style={styles.placeOrderButtonText}>CONFIRMAR PEDIDO</Text>
           )}
         </TouchableOpacity>
       </View>
@@ -247,31 +231,31 @@ export default function CheckoutScreen() {
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: COLORS.background },
-  header: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', padding: 16, borderBottomWidth: 1, borderBottomColor: COLORS.border },
-  headerTitle: { fontSize: 18, fontWeight: '700', color: COLORS.text },
+  container: { flex: 1, backgroundColor: '#FFF' },
+  header: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', padding: 16, borderBottomWidth: 1, borderBottomColor: '#EEE' },
+  headerTitle: { fontFamily: 'Anton', fontSize: 20, color: '#000' },
   content: { flex: 1, padding: 16 },
   section: { marginBottom: 24 },
-  sectionTitle: { fontSize: 16, fontWeight: '600', color: COLORS.text, marginBottom: 12 },
-  deliveryOptions: { flexDirection: 'row', justifyContent: 'space-between' },
-  deliveryOption: { flex: 1, alignItems: 'center', padding: 12, borderRadius: 12, backgroundColor: COLORS.surface, marginHorizontal: 4 },
-  deliveryOptionActive: { backgroundColor: COLORS.primary },
-  deliveryOptionText: { marginTop: 4, fontSize: 12, color: COLORS.text },
-  deliveryOptionTextActive: { color: COLORS.white, fontWeight: '600' },
-  input: { backgroundColor: COLORS.surface, borderRadius: 12, padding: 12, fontSize: 14, color: COLORS.text, textAlignVertical: 'top' },
+  sectionTitle: { fontFamily: 'Anton', fontSize: 14, color: colors.primary, marginBottom: 12 },
+  deliveryOptions: { flexDirection: 'row', gap: 10 },
+  deliveryOption: { flex: 1, alignItems: 'center', padding: 12, borderRadius: 12, backgroundColor: '#F9F9F9', borderWidth: 1, borderColor: '#EEE' },
+  deliveryOptionActive: { backgroundColor: '#FFFBE6', borderColor: colors.primary },
+  deliveryOptionText: { fontFamily: 'Anton', marginTop: 4, fontSize: 10, color: '#666' },
+  deliveryOptionTextActive: { color: '#000' },
+  input: { fontFamily: 'Anton', backgroundColor: '#F9F9F9', borderRadius: 12, padding: 12, fontSize: 14, color: '#000', textAlignVertical: 'top', borderWidth: 1, borderColor: '#EEE' },
   paymentOptions: { gap: 8 },
-  paymentOption: { flexDirection: 'row', alignItems: 'center', padding: 12, borderRadius: 12, borderWidth: 1, borderColor: COLORS.border },
-  paymentOptionActive: { borderColor: COLORS.primary, backgroundColor: '#FFFBE6' },
-  paymentOptionText: { marginLeft: 12, fontSize: 14, color: COLORS.text },
-  summarySection: { backgroundColor: COLORS.surface, padding: 16, borderRadius: 12, marginBottom: 32 },
+  paymentOption: { flexDirection: 'row', alignItems: 'center', padding: 12, borderRadius: 12, borderWidth: 1, borderColor: '#EEE', backgroundColor: '#F9F9F9' },
+  paymentOptionActive: { borderColor: colors.primary, backgroundColor: '#FFFBE6' },
+  paymentOptionText: { fontFamily: 'Anton', marginLeft: 12, fontSize: 14, color: '#000' },
+  summarySection: { backgroundColor: '#F9F9F9', padding: 16, borderRadius: 12, marginBottom: 32 },
   summaryRow: { flexDirection: 'row', justifyContent: 'space-between', marginBottom: 8 },
-  summaryLabel: { fontSize: 14, color: COLORS.textSecondary },
-  summaryValue: { fontSize: 14, color: COLORS.text, fontWeight: '500' },
-  totalRow: { marginTop: 8, paddingTop: 8, borderTopWidth: 1, borderTopColor: COLORS.border },
-  totalLabel: { fontSize: 16, fontWeight: '700', color: COLORS.text },
-  totalValue: { fontSize: 20, fontWeight: '800', color: COLORS.primary },
-  footer: { padding: 16, borderTopWidth: 1, borderTopColor: COLORS.border },
-  placeOrderButton: { backgroundColor: COLORS.primary, padding: 16, borderRadius: 12, alignItems: 'center' },
-  placeOrderButtonText: { color: COLORS.white, fontSize: 16, fontWeight: '700' },
+  summaryLabel: { fontSize: 14, color: '#666' },
+  summaryValue: { fontFamily: 'Anton', fontSize: 14, color: '#000' },
+  totalRow: { marginTop: 8, paddingTop: 8, borderTopWidth: 1, borderTopColor: '#DDD' },
+  totalLabel: { fontFamily: 'Anton', fontSize: 18, color: '#000' },
+  totalValue: { fontFamily: 'Anton', fontSize: 22, color: colors.primary },
+  footer: { padding: 16, borderTopWidth: 1, borderTopColor: '#EEE' },
+  placeOrderButton: { backgroundColor: colors.primary, padding: 16, borderRadius: 12, alignItems: 'center', elevation: 3 },
+  placeOrderButtonText: { fontFamily: 'Anton', color: '#000', fontSize: 18 },
   disabledButton: { opacity: 0.7 },
 });
