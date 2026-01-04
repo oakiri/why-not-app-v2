@@ -5,6 +5,7 @@ import { useFonts } from 'expo-font';
 
 import { AuthProvider } from '../src/context/AuthContext';
 import AuthGate from '../src/components/auth/AuthGate';
+import { applyGlobalAntonFont } from '../src/theme/applyGlobalTextStyle';
 
 SplashScreen.preventAutoHideAsync().catch(() => {});
 
@@ -15,6 +16,7 @@ export default function RootLayout() {
 
   useEffect(() => {
     if (fontsLoaded) {
+      applyGlobalAntonFont();
       SplashScreen.hideAsync().catch(() => {});
     }
   }, [fontsLoaded]);
