@@ -15,6 +15,7 @@ import { router } from "expo-router";
 import { signOut, deleteUser } from "firebase/auth";
 import { doc, getDoc, setDoc, deleteDoc } from "firebase/firestore";
 import { Ionicons } from '@expo/vector-icons';
+import { Picker } from '@react-native-picker/picker';
 
 import { auth, db } from "../../lib/firebase";
 import useAuth from "../../hooks/useAuth";
@@ -25,12 +26,16 @@ export default function ProfileScreen() {
 
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
-  const [profileExists, setProfileExists] = useState(false);
 
-  const [email, setEmail] = useState(user?.email ?? "");
-  const [role, setRole] = useState("cliente");
-  const [name, setName] = useState("");
-  const [phone, setPhone] = useState("");
+  const [formData, setFormData] = useState({
+    name: '',
+    phone: '',
+    address: '',
+    city: 'Jerez de la Frontera',
+    province: 'Cádiz',
+    postalCode: '',
+    role: 'cliente'
+  });
 
   const [info, setInfo] = useState("");
   const [error, setError] = useState("");
@@ -48,16 +53,19 @@ export default function ProfileScreen() {
 
       try {
         const snap = await getDoc(ref);
-
         if (!mounted) return;
 
         if (snap.exists()) {
           const data = snap.data();
-          setProfileExists(true);
-          setEmail(data.email || user.email || "");
-          setRole(data.role || "cliente");
-          setName(data.name || "");
-          setPhone(data.phone || "");
+          setFormData({
+            name: data.name || "",
+            phone: data.phone || "",
+            address: data.address?.line1 || "",
+            city: data.address?.city || "Jerez de la Frontera",
+            province: data.address?.province || "Cádiz",
+            postalCode: data.address?.postalCode || "",
+            role: data.role || "cliente"
+          });
         }
       } catch (e) {
         if (!mounted) return;
@@ -71,7 +79,20 @@ export default function ProfileScreen() {
     return () => { mounted = false; };
   }, [ref, user]);
 
+  const validateForm = () => {
+    if (!formData.name.trim() || !formData.phone.trim() || !formData.address.trim() || !formData.postalCode.trim()) {
+      Alert.alert('Error', 'Por favor, rellena todos los campos obligatorios.');
+      return false;
+    }
+    if (formData.phone.trim().length !== 9) {
+      Alert.alert('Error', 'El teléfono debe tener 9 dígitos.');
+      return false;
+    }
+    return true;
+  };
+
   const save = async () => {
+    if (!validateForm()) return;
     setError("");
     setInfo("");
     if (!ref || !user) return;
@@ -81,15 +102,18 @@ export default function ProfileScreen() {
       await setDoc(
         ref,
         {
-          email: user.email ?? email,
-          role,
-          name: name.trim(),
-          phone: phone.trim(),
+          name: formData.name.trim(),
+          phone: formData.phone.trim(),
+          address: {
+            line1: formData.address.trim(),
+            city: formData.city,
+            province: formData.province,
+            postalCode: formData.postalCode.trim(),
+          },
           updatedAt: new Date().toISOString(),
         },
         { merge: true }
       );
-      setProfileExists(true);
       setInfo("Perfil guardado correctamente.");
     } catch (e) {
       setError("No se pudo guardar el perfil.");
@@ -110,7 +134,7 @@ export default function ProfileScreen() {
   const handleDeleteAccount = () => {
     Alert.alert(
       "Eliminar cuenta",
-      "¿Estás seguro de que quieres eliminar tu cuenta? Esta acción no se puede deshacer y perderás todos tus datos y puntos.",
+      "¿Estás seguro? Esta acción no se puede deshacer y perderás todos tus datos y puntos.",
       [
         { text: "Cancelar", style: "cancel" },
         { 
@@ -121,18 +145,12 @@ export default function ProfileScreen() {
               setLoading(true);
               const currentUser = auth.currentUser;
               if (currentUser) {
-                // 1. Eliminar documento de Firestore
                 await deleteDoc(doc(db, "users", currentUser.uid));
-                // 2. Eliminar usuario de Auth
                 await deleteUser(currentUser);
                 router.replace("/(auth)/login");
               }
             } catch (e) {
-              console.error(e);
-              Alert.alert(
-                "Error", 
-                "Para eliminar tu cuenta por seguridad debes haber iniciado sesión recientemente. Por favor, cierra sesión e inicia de nuevo antes de intentar eliminarla."
-              );
+              Alert.alert("Error", "Por seguridad, cierra sesión e inicia de nuevo antes de eliminar tu cuenta.");
             } finally {
               setLoading(false);
             }
@@ -142,20 +160,7 @@ export default function ProfileScreen() {
     );
   };
 
-  if (!user) {
-    return (
-      <View style={styles.centered}>
-        <Text style={styles.title}>PERFIL</Text>
-        <Text style={styles.description}>No hay sesión activa.</Text>
-        <TouchableOpacity 
-          style={styles.primaryButton}
-          onPress={() => router.replace("/(auth)/login")}
-        >
-          <Text style={styles.primaryButtonText}>Ir al Login</Text>
-        </TouchableOpacity>
-      </View>
-    );
-  }
+  if (loading) return <View style={styles.centered}><ActivityIndicator size="large" color={colors.primary} /></View>;
 
   return (
     <KeyboardAvoidingView 
@@ -170,58 +175,76 @@ export default function ProfileScreen() {
 
         <View style={styles.formGroup}>
           <Text style={styles.label}>Email</Text>
-          <TextInput
-            value={email}
-            editable={false}
-            style={[styles.input, styles.disabledInput]}
-          />
+          <TextInput value={user?.email} editable={false} style={[styles.input, styles.disabledInput]} />
 
           <Text style={styles.label}>Nombre</Text>
           <TextInput
-            value={name}
-            onChangeText={setName}
-            placeholder="Tu nombre"
+            value={formData.name}
+            onChangeText={(t) => setFormData({...formData, name: t})}
             style={styles.input}
           />
 
           <Text style={styles.label}>Teléfono</Text>
           <TextInput
-            value={phone}
-            onChangeText={setPhone}
-            placeholder="Tu teléfono"
+            value={formData.phone}
+            onChangeText={(t) => setFormData({...formData, phone: t})}
             keyboardType="phone-pad"
+            maxLength={9}
             style={styles.input}
           />
 
-          <Text style={styles.label}>Rol</Text>
+          <Text style={styles.label}>Dirección</Text>
           <TextInput
-            value={role}
-            editable={false}
-            style={[styles.input, styles.disabledInput]}
+            value={formData.address}
+            onChangeText={(t) => setFormData({...formData, address: t})}
+            style={styles.input}
           />
+
+          <View style={{ flexDirection: 'row', gap: 10, marginBottom: 16 }}>
+            <View style={[styles.input, { flex: 1, paddingVertical: 0, justifyContent: 'center', marginBottom: 0 }]}>
+              <Picker
+                selectedValue={formData.city}
+                onValueChange={(v) => setFormData({ ...formData, city: v })}
+                style={{ height: 50 }}
+              >
+                <Picker.Item label="Jerez de la Frontera" value="Jerez de la Frontera" />
+              </Picker>
+            </View>
+            <TextInput
+              placeholder="C.P."
+              keyboardType="numeric"
+              maxLength={5}
+              value={formData.postalCode}
+              onChangeText={(t) => setFormData({ ...formData, postalCode: t })}
+              style={[styles.input, { width: 80, marginBottom: 0 }]}
+            />
+          </View>
+
+          <View style={[styles.input, { paddingVertical: 0, justifyContent: 'center' }]}>
+            <Picker
+              selectedValue={formData.province}
+              onValueChange={(v) => setFormData({ ...formData, province: v })}
+              style={{ height: 50 }}
+            >
+              <Picker.Item label="Cádiz" value="Cádiz" />
+            </Picker>
+          </View>
+
+          <Text style={styles.label}>Rol</Text>
+          <TextInput value={formData.role.toUpperCase()} editable={false} style={[styles.input, styles.disabledInput]} />
         </View>
 
-        <TouchableOpacity
-          onPress={save}
-          disabled={saving}
-          style={styles.primaryButton}
-        >
-          {saving ? <ActivityIndicator color="#000" /> : <Text style={styles.primaryButtonText}>Guardar cambios</Text>}
+        <TouchableOpacity onPress={save} disabled={saving} style={styles.primaryButton}>
+          {saving ? <ActivityIndicator color="#000" /> : <Text style={styles.primaryButtonText}>GUARDAR CAMBIOS</Text>}
         </TouchableOpacity>
 
-        <TouchableOpacity
-          onPress={handleLogout}
-          style={styles.secondaryButton}
-        >
-          <Text style={styles.secondaryButtonText}>Cerrar sesión</Text>
+        <TouchableOpacity onPress={handleLogout} style={styles.secondaryButton}>
+          <Text style={styles.secondaryButtonText}>CERRAR SESIÓN</Text>
         </TouchableOpacity>
 
-        <TouchableOpacity
-          onPress={handleDeleteAccount}
-          style={styles.deleteButton}
-        >
+        <TouchableOpacity onPress={handleDeleteAccount} style={styles.deleteButton}>
           <Ionicons name="trash-outline" size={18} color="#FF4444" />
-          <Text style={styles.deleteButtonText}>Eliminar mi cuenta</Text>
+          <Text style={styles.deleteButtonText}>ELIMINAR MI CUENTA</Text>
         </TouchableOpacity>
       </ScrollView>
     </KeyboardAvoidingView>
@@ -229,107 +252,20 @@ export default function ProfileScreen() {
 }
 
 const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: "#FFF",
-  },
-  scrollContent: {
-    padding: 24,
-    paddingBottom: 40,
-  },
-  centered: {
-    flex: 1,
-    justifyContent: "center",
-    alignItems: "center",
-    padding: 24,
-  },
-  title: {
-    fontFamily: "Anton",
-    fontSize: 32,
-    color: "#000",
-    marginBottom: 24,
-    textAlign: "center",
-  },
-  description: {
-    fontFamily: "Anton",
-    fontSize: 16,
-    color: "#666",
-    marginBottom: 24,
-  },
-  formGroup: {
-    marginBottom: 24,
-  },
-  label: {
-    fontFamily: "Anton",
-    fontSize: 14,
-    color: colors.primary,
-    marginBottom: 8,
-    textTransform: "uppercase",
-  },
-  input: {
-    fontFamily: "Anton",
-    borderWidth: 1,
-    borderColor: "#DDD",
-    borderRadius: 12,
-    paddingHorizontal: 15,
-    paddingVertical: 12,
-    marginBottom: 16,
-    fontSize: 16,
-    color: "#000",
-  },
-  disabledInput: {
-    backgroundColor: "#F5F5F5",
-    color: "#999",
-  },
-  primaryButton: {
-    backgroundColor: colors.primary,
-    borderRadius: 12,
-    paddingVertical: 16,
-    alignItems: "center",
-    marginBottom: 12,
-    elevation: 2,
-  },
-  primaryButtonText: {
-    fontFamily: "Anton",
-    fontSize: 18,
-    color: "#000",
-  },
-  secondaryButton: {
-    borderWidth: 2,
-    borderColor: colors.primary,
-    borderRadius: 12,
-    paddingVertical: 16,
-    alignItems: "center",
-    marginBottom: 32,
-  },
-  secondaryButtonText: {
-    fontFamily: "Anton",
-    fontSize: 16,
-    color: colors.primary,
-  },
-  deleteButton: {
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "center",
-    paddingVertical: 12,
-  },
-  deleteButtonText: {
-    fontFamily: "Anton",
-    color: "#FF4444",
-    fontSize: 14,
-    marginLeft: 8,
-    textDecorationLine: "underline",
-  },
-  errorText: {
-    fontFamily: "Anton",
-    color: "red",
-    marginBottom: 12,
-    textAlign: "center",
-  },
-  infoText: {
-    fontFamily: "Anton",
-    color: "green",
-    marginBottom: 12,
-    textAlign: "center",
-  },
+  container: { flex: 1, backgroundColor: "#FFF" },
+  scrollContent: { padding: 24, paddingBottom: 40 },
+  centered: { flex: 1, justifyContent: "center", alignItems: "center" },
+  title: { fontFamily: "Anton", fontSize: 32, color: "#000", marginBottom: 24, textAlign: "center" },
+  formGroup: { marginBottom: 24 },
+  label: { fontFamily: "Anton", fontSize: 14, color: colors.primary, marginBottom: 8, textTransform: "uppercase" },
+  input: { fontFamily: "Anton", borderWidth: 1, borderColor: "#DDD", borderRadius: 12, paddingHorizontal: 15, paddingVertical: 12, marginBottom: 16, fontSize: 16, color: "#000" },
+  disabledInput: { backgroundColor: "#F5F5F5", color: "#999" },
+  primaryButton: { backgroundColor: colors.primary, borderRadius: 12, paddingVertical: 16, alignItems: "center", marginBottom: 12, elevation: 2 },
+  primaryButtonText: { fontFamily: "Anton", fontSize: 18, color: "#000" },
+  secondaryButton: { borderWidth: 2, borderColor: colors.primary, borderRadius: 12, paddingVertical: 16, alignItems: "center", marginBottom: 32 },
+  secondaryButtonText: { fontFamily: "Anton", fontSize: 16, color: colors.primary },
+  deleteButton: { flexDirection: "row", alignItems: "center", justifyContent: "center", paddingVertical: 12 },
+  deleteButtonText: { fontFamily: "Anton", color: "#FF4444", fontSize: 14, marginLeft: 8, textDecorationLine: "underline" },
+  errorText: { fontFamily: "Anton", color: "red", marginBottom: 12, textAlign: "center" },
+  infoText: { fontFamily: "Anton", color: "green", marginBottom: 12, textAlign: "center" },
 });
