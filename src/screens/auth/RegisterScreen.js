@@ -15,12 +15,12 @@ import { router } from 'expo-router';
 import { createUserWithEmailAndPassword, sendEmailVerification } from 'firebase/auth';
 import { doc, setDoc, serverTimestamp } from 'firebase/firestore';
 import { Ionicons } from '@expo/vector-icons';
-import { Picker } from '@react-native-picker/picker';
 
 import { auth, db } from '../../lib/firebase';
 import AuthLayout from '../../components/auth/AuthLayout';
 import { colors } from '../../theme/theme';
 import { mapAuthErrorMessage } from '../../utils/authErrorMessages';
+import CustomPicker from '../../components/ui/CustomPicker';
 
 export default function RegisterScreen() {
   const [loading, setLoading] = useState(false);
@@ -38,6 +38,14 @@ export default function RegisterScreen() {
     province: 'Cádiz',
     postalCode: '',
   });
+
+  const cityOptions = [
+    { label: 'Jerez de la Frontera', value: 'Jerez de la Frontera' }
+  ];
+
+  const provinceOptions = [
+    { label: 'Cádiz', value: 'Cádiz' }
+  ];
 
   const validateForm = () => {
     const { email, password, confirmPassword, name, phone, address, postalCode } = formData;
@@ -198,16 +206,12 @@ export default function RegisterScreen() {
             />
             
             <View style={{ flexDirection: 'row', gap: 10, marginBottom: 12 }}>
-              <View style={[styles.input, { flex: 1, paddingVertical: 0, justifyContent: 'center', marginBottom: 0 }]}>
-                <Picker
-                  selectedValue={formData.city}
-                  onValueChange={(v) => setFormData({ ...formData, city: v })}
-                  style={{ height: 50 }}
-                  itemStyle={{ fontFamily: 'Anton', fontSize: 16 }}
-                >
-                  <Picker.Item label="Jerez de la Frontera" value="Jerez de la Frontera" />
-                </Picker>
-              </View>
+              <CustomPicker
+                options={cityOptions}
+                selectedValue={formData.city}
+                onValueChange={(v) => setFormData({ ...formData, city: v })}
+                style={{ flex: 1, marginBottom: 0 }}
+              />
               <TextInput
                 placeholder="C.P."
                 placeholderTextColor="#999"
@@ -219,16 +223,12 @@ export default function RegisterScreen() {
               />
             </View>
 
-            <View style={[styles.input, { paddingVertical: 0, justifyContent: 'center' }]}>
-              <Picker
-                selectedValue={formData.province}
-                onValueChange={(v) => setFormData({ ...formData, province: v })}
-                style={{ height: 50 }}
-                itemStyle={{ fontFamily: 'Anton', fontSize: 16 }}
-              >
-                <Picker.Item label="Cádiz" value="Cádiz" />
-              </Picker>
-            </View>
+            <CustomPicker
+              options={provinceOptions}
+              selectedValue={formData.province}
+              onValueChange={(v) => setFormData({ ...formData, province: v })}
+              style={{ marginBottom: 0 }}
+            />
           </View>
 
           <TouchableOpacity

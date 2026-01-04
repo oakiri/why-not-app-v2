@@ -15,11 +15,11 @@ import { router } from "expo-router";
 import { signOut, deleteUser } from "firebase/auth";
 import { doc, getDoc, setDoc, deleteDoc } from "firebase/firestore";
 import { Ionicons } from '@expo/vector-icons';
-import { Picker } from '@react-native-picker/picker';
 
 import { auth, db } from "../../lib/firebase";
 import useAuth from "../../hooks/useAuth";
 import { colors } from "../../theme/theme";
+import CustomPicker from "../../components/ui/CustomPicker";
 
 export default function ProfileScreen() {
   const { user } = useAuth();
@@ -36,6 +36,14 @@ export default function ProfileScreen() {
     postalCode: '',
     role: 'cliente'
   });
+
+  const cityOptions = [
+    { label: 'Jerez de la Frontera', value: 'Jerez de la Frontera' }
+  ];
+
+  const provinceOptions = [
+    { label: 'Cádiz', value: 'Cádiz' }
+  ];
 
   const [info, setInfo] = useState("");
   const [error, setError] = useState("");
@@ -206,16 +214,12 @@ export default function ProfileScreen() {
           />
 
           <View style={{ flexDirection: 'row', gap: 10, marginBottom: 16 }}>
-            <View style={[styles.input, { flex: 1, paddingVertical: 0, justifyContent: 'center', marginBottom: 0 }]}>
-              <Picker
-                selectedValue={formData.city}
-                onValueChange={(v) => setFormData({ ...formData, city: v })}
-                style={{ height: 50 }}
-                itemStyle={{ fontFamily: 'Anton', fontSize: 16 }}
-              >
-                <Picker.Item label="Jerez de la Frontera" value="Jerez de la Frontera" />
-              </Picker>
-            </View>
+            <CustomPicker
+              options={cityOptions}
+              selectedValue={formData.city}
+              onValueChange={(v) => setFormData({ ...formData, city: v })}
+              style={{ flex: 1, marginBottom: 0 }}
+            />
             <TextInput
               placeholder="C.P."
               keyboardType="numeric"
@@ -226,16 +230,12 @@ export default function ProfileScreen() {
             />
           </View>
 
-          <View style={[styles.input, { paddingVertical: 0, justifyContent: 'center' }]}>
-            <Picker
-              selectedValue={formData.province}
-              onValueChange={(v) => setFormData({ ...formData, province: v })}
-              style={{ height: 50 }}
-              itemStyle={{ fontFamily: 'Anton', fontSize: 16 }}
-            >
-              <Picker.Item label="Cádiz" value="Cádiz" />
-            </Picker>
-          </View>
+          <CustomPicker
+            options={provinceOptions}
+            selectedValue={formData.province}
+            onValueChange={(v) => setFormData({ ...formData, province: v })}
+            style={{ marginBottom: 16 }}
+          />
 
           <Text style={styles.label}>Rol de usuario</Text>
           <TextInput value={formData.role.toUpperCase()} editable={false} style={[styles.input, styles.disabledInput]} />
