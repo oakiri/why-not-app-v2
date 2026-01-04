@@ -7,7 +7,7 @@ const TABS_GROUP = '(tabs)';
 const BACKOFFICE_GROUP = '(backoffice)';
 
 // Rutas públicas dentro de (auth)
-const PUBLIC_AUTH_ROUTES = new Set(['login', 'register', 'forgot-password', 'verify-email']);
+const PUBLIC_AUTH_ROUTES = new Set(['login', 'register', 'forgot-password', 'verify-email', 'role-selector']);
 
 export default function AuthGate({ children }: { children?: React.ReactNode }) {
   const { user, isReady, isVerified, profile, profileLoading } = useAuth();
@@ -36,8 +36,6 @@ export default function AuthGate({ children }: { children?: React.ReactNode }) {
     }
 
     // 2) Logado pero NO verificado -> siempre a verify-email
-    // Nota: Firebase a veces tarda un segundo en actualizar emailVerified tras el reload,
-    // por eso es importante que el usuario pulse el botón "Ya lo he verificado" que fuerza el reload.
     if (!user.emailVerified) {
       if (!(inAuth && route === 'verify-email')) {
         router.replace('/(auth)/verify-email');
@@ -48,10 +46,10 @@ export default function AuthGate({ children }: { children?: React.ReactNode }) {
     // 3) Logado + verificado -> Redirigir según ROL
     const userRole = profile?.role || 'cliente';
 
-    if (userRole === 'empleado' || userRole === 'admin') {
-      // Empleados/Admins van al Backoffice
-      if (!inBackoffice) {
-        router.replace('/(backoffice)/dashboard');
+    if (userRole === 'empleado' || userRole === 'master' || userRole === 'admin') {
+      // Personal autorizado -> Mostrar selector de roles si no está ya en backoffice o selector
+      if (!inBackoffice && route !== 'role-selector') {
+        router.replace('/(auth)/role-selector');
       }
     } else {
       // Clientes van a las Tabs normales
