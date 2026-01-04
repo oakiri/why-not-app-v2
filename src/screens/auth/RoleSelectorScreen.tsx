@@ -11,7 +11,7 @@ export default function RoleSelectorScreen() {
     <View style={styles.container}>
       <View style={styles.header}>
         <Image 
-          source={require('../../../assets/images/logo.png')} 
+          source={require('../../../assets/logo.png')} 
           style={styles.logo}
           resizeMode="contain"
         />
@@ -22,7 +22,7 @@ export default function RoleSelectorScreen() {
       <View style={styles.options}>
         <TouchableOpacity 
           style={styles.card} 
-          onPress={() => router.replace('/(tabs)')}
+          onPress={() => router.replace('/(tabs)/home')}
         >
           <View style={[styles.iconContainer, { backgroundColor: colors.primary }]}>
             <Ionicons name="fast-food" size={40} color="#000" />
@@ -43,7 +43,7 @@ export default function RoleSelectorScreen() {
         </TouchableOpacity>
       </View>
 
-      <TouchableOpacity style={styles.logout} onPress={() => router.replace('/login')}>
+      <TouchableOpacity style={styles.logout} onPress={() => router.replace('/(auth)/login')}>
         <Text style={styles.logoutText}>Cerrar sesión</Text>
       </TouchableOpacity>
     </View>
