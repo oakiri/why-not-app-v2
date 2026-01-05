@@ -13,7 +13,7 @@ SplashScreen.preventAutoHideAsync().catch(() => {});
 
 export default function RootLayout() {
   const [fontsLoaded, fontError] = useFonts({
-    Anton: require('../assets/fonts/Anton-Regular.ttf'),
+    'Anton-Regular': require('../assets/fonts/Anton-Regular.ttf'),
   });
 
   useEffect(() => {

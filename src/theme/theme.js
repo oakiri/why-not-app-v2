@@ -8,18 +8,18 @@ export const colors = {
 
 export const typography = {
   title: {
-    fontFamily: 'Anton',
+    fontFamily: 'Anton-Regular',
     fontSize: 24,
     letterSpacing: 1,
     textTransform: 'uppercase',
   },
   subtitle: {
-    fontFamily: 'Anton',
+    fontFamily: 'Anton-Regular',
     fontSize: 18,
     textTransform: 'uppercase',
   },
   body: {
-    fontFamily: 'Anton',
+    fontFamily: 'Anton-Regular',
     fontSize: 14,
   },
 };
