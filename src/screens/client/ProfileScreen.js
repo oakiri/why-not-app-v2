@@ -9,7 +9,8 @@ import {
   ActivityIndicator,
   KeyboardAvoidingView,
   Platform,
-  Modal
+  Modal,
+  Text // Necesario para el error fatal en _layout.tsx
 } from "react-native";
 import AntonText from "../../components/ui/AntonText";
 import { router } from "expo-router";

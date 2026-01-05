@@ -13,7 +13,7 @@ SplashScreen.preventAutoHideAsync().catch(() => {});
 
 export default function RootLayout() {
   const [fontsLoaded, fontError] = useFonts({
-    'Anton-Regular': require('../assets/fonts/Anton-Regular.ttf'),
+    'Anton-Regular': require('../assets/fonts/custom/Anton-Regular.ttf'),
   });
 
   useEffect(() => {
@@ -29,7 +29,13 @@ export default function RootLayout() {
   // Handle font loading error
   if (fontError) {
     console.error("Error loading fonts:", fontError);
-    // Optionally, you could render a fallback UI here
+    // Render a fatal error screen if the core font fails to load
+    return (
+      <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center', backgroundColor: 'red' }}>
+        <Text style={{ color: 'white', fontSize: 20 }}>ERROR FATAL: Fuente Anton no cargada.</Text>
+        <Text style={{ color: 'white', fontSize: 12 }}>{fontError.message}</Text>
+      </View>
+    );
   }
 
   return (
