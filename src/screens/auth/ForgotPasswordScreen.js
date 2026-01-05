@@ -71,7 +71,7 @@ export default function ForgotPasswordScreen() {
         </AntonText>
 
         <TextInput
-          style={[styles.input, { fontFamily: 'Anton' }]}
+          style={[styles.input, { fontFamily: 'Anton', WebkitAppearance: 'none' }]}
           placeholder="Tu correo electrónico"
           placeholderTextColor="#999"
           value={email}

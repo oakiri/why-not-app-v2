@@ -167,20 +167,18 @@ export default function ProfileScreen() {
           {renderInput("Teléfono", "phone", { keyboardType: "phone-pad", maxLength: 9 })}
           {renderInput("Dirección", "address")}
           
-          <View style={styles.row}>
-            <View style={{ flex: 3 }}>
+	          <View style={{ flexDirection: 'row', gap: 10, marginBottom: 12 }}>
+	            <View style={{ flex: 3 }}>
 	              <CustomPicker
-	                label=""
 	                options={[{ label: 'Jerez de la Frontera', value: 'Jerez de la Frontera' }]}
 	                selectedValue={formData.city}
 	                onValueChange={(v) => setFormData({ ...formData, city: v })}
-	                containerStyle={{ marginBottom: 0 }}
 	              />
-            </View>
-	            <View style={{ flex: 1 }}>
-	              {renderInput("", "postalCode", { keyboardType: "numeric", maxLength: 5, containerStyle: { marginBottom: 0 }, placeholder: "C.P." })}
 	            </View>
-          </View>
+	            <View style={{ flex: 1 }}>
+	              {renderInput("C.P.", "postalCode", { keyboardType: "numeric", maxLength: 5 })}
+	            </View>
+	          </View>
         </View>
 
         <TouchableOpacity onPress={save} disabled={saving} style={styles.primaryButton}>
