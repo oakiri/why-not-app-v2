@@ -1,0 +1,12 @@
+@font-face {
+  font-family: 'Anton';
+  src: url('../../assets/fonts/Anton-Regular.ttf') format('truetype');
+}
+
+* {
+  font-family: 'Anton', sans-serif !important;
+}
+
+input, textarea, button, select {
+  font-family: 'Anton', sans-serif !important;
+}

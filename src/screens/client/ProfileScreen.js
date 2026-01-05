@@ -14,7 +14,7 @@ import {
 } from "react-native";
 import { router } from "expo-router";
 import { signOut, deleteUser, reauthenticateWithCredential, EmailAuthProvider } from "firebase/auth";
-import { doc, setDoc, deleteDoc } from "firebase/firestore";
+import { doc, setDoc, deleteDoc, getDoc } from "firebase/firestore";
 import { Ionicons } from '@expo/vector-icons';
 
 import { auth, db } from "../../lib/firebase";
@@ -28,7 +28,7 @@ const JEREZ_ZIP_CODES = [
 ];
 
 export default function ProfileScreen() {
-  const { user, profile, profileLoading } = useAuth();
+  const { user, profile, profileLoading, logout } = useAuth();
   const [saving, setSaving] = useState(false);
   const [errors, setErrors] = useState({});
   const [info, setInfo] = useState("");
@@ -76,8 +76,10 @@ export default function ProfileScreen() {
   const save = async () => {
     if (!validate()) return;
     setSaving(true);
+    setErrors({});
     try {
-      await setDoc(doc(db, "users", user.uid), {
+      const userRef = doc(db, "users", user.uid);
+      await setDoc(userRef, {
         name: formData.name.trim(),
         phone: formData.phone.trim(),
         address: {
@@ -88,26 +90,22 @@ export default function ProfileScreen() {
         },
         updatedAt: new Date().toISOString(),
       }, { merge: true });
-      setInfo("Perfil guardado correctamente.");
+      
+      setInfo("¡Perfil guardado correctamente!");
       setTimeout(() => setInfo(""), 3000);
     } catch (e) {
-      setErrors({ general: "No se pudo guardar el perfil." });
+      console.error("Error saving profile:", e);
+      setErrors({ general: "Error al guardar. Verifica tu conexión." });
     } finally {
       setSaving(false);
     }
   };
 
-  const handleLogout = async () => {
-    await signOut(auth);
-    router.replace("/(auth)/login");
-  };
-
   const confirmDelete = async () => {
     if (!password) {
-      Alert.alert("Error", "Debes introducir tu contraseña para confirmar.");
+      Alert.alert("Error", "Introduce tu contraseña.");
       return;
     }
-
     try {
       const credential = EmailAuthProvider.credential(user.email, password);
       await reauthenticateWithCredential(auth.currentUser, credential);
@@ -116,7 +114,7 @@ export default function ProfileScreen() {
       setReauthVisible(false);
       router.replace("/(auth)/login");
     } catch (e) {
-      Alert.alert("Error", "Contraseña incorrecta o error al eliminar la cuenta.");
+      Alert.alert("Error", "Contraseña incorrecta.");
     }
   };
 
@@ -140,6 +138,8 @@ export default function ProfileScreen() {
 
   if (profileLoading) return <View style={styles.centered}><ActivityIndicator size="large" color={colors.primary} /></View>;
 
+  const isStaff = profile?.role === 'master' || profile?.role === 'employee';
+
   return (
     <KeyboardAvoidingView behavior={Platform.OS === 'ios' ? 'padding' : 'height'} style={styles.container}>
       <ScrollView contentContainerStyle={styles.scrollContent}>
@@ -150,7 +150,8 @@ export default function ProfileScreen() {
           <Text style={styles.pointsText}>{profile?.points || 0} PUNTOS WHY NOT</Text>
         </View>
 
-        {info ? <Text style={styles.infoText}>{info}</Text> : null}
+        {info ? <View style={styles.successBox}><Text style={styles.successText}>{info}</Text></View> : null}
+        {errors.general ? <View style={styles.errorBox}><Text style={styles.errorText}>{errors.general}</Text></View> : null}
 
         <View style={styles.formSection}>
           {renderInput("Email", "email", { editable: false })}
@@ -172,10 +173,10 @@ export default function ProfileScreen() {
             </View>
           </View>
 
-          {(profile?.role === 'master' || profile?.role === 'employee') && (
+          {isStaff && (
             <TouchableOpacity style={styles.adminBtn} onPress={() => router.replace("/(auth)/role-selector")}>
               <Ionicons name="settings" size={20} color="#000" />
-              <Text style={styles.adminBtnText}>PANEL DE CONTROL</Text>
+              <Text style={styles.adminBtnText}>IR AL PANEL DE CONTROL</Text>
             </TouchableOpacity>
           )}
         </View>
@@ -184,22 +185,22 @@ export default function ProfileScreen() {
           {saving ? <ActivityIndicator color="#000" /> : <Text style={styles.primaryButtonText}>GUARDAR CAMBIOS</Text>}
         </TouchableOpacity>
 
-        <TouchableOpacity onPress={handleLogout} style={styles.secondaryButton}>
+        <TouchableOpacity onPress={logout} style={styles.secondaryButton}>
           <Text style={styles.secondaryButtonText}>CERRAR SESIÓN</Text>
         </TouchableOpacity>
 
         <TouchableOpacity onPress={() => setReauthVisible(true)} style={styles.deleteBtn}>
-          <Text style={styles.deleteBtnText}>ELIMINAR CUENTA</Text>
+          <Text style={styles.deleteBtnText}>ELIMINAR MI CUENTA PERMANENTEMENTE</Text>
         </TouchableOpacity>
 
-        <Modal visible={reauthVisible} transparent animationType="slide">
+        <Modal visible={reauthVisible} transparent animationType="fade">
           <View style={styles.modalOverlay}>
             <View style={styles.modalContent}>
               <Text style={styles.modalTitle}>CONFIRMAR ELIMINACIÓN</Text>
-              <Text style={styles.modalDesc}>Por seguridad, introduce tu contraseña para eliminar permanentemente tu cuenta.</Text>
+              <Text style={styles.modalDesc}>Esta acción borrará todos tus datos. Introduce tu contraseña para confirmar.</Text>
               <TextInput
                 style={styles.modalInput}
-                placeholder="Contraseña"
+                placeholder="Tu contraseña"
                 secureTextEntry
                 value={password}
                 onChangeText={setPassword}
@@ -222,36 +223,38 @@ export default function ProfileScreen() {
 
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: "#FFF" },
-  scrollContent: { padding: 24 },
+  scrollContent: { padding: 24, paddingBottom: 50 },
   centered: { flex: 1, justifyContent: "center", alignItems: "center" },
-  title: { fontFamily: "Anton", fontSize: 32, color: "#000", marginBottom: 10, textAlign: "center" },
-  pointsBadge: { backgroundColor: colors.primary, flexDirection: 'row', padding: 10, borderRadius: 20, alignSelf: 'center', alignItems: 'center', marginBottom: 25 },
-  pointsText: { fontFamily: "Anton", fontSize: 14, marginLeft: 8 },
+  title: { fontFamily: "Anton", fontSize: 36, color: "#000", marginBottom: 10, textAlign: "center" },
+  pointsBadge: { backgroundColor: colors.primary, flexDirection: 'row', padding: 12, borderRadius: 25, alignSelf: 'center', alignItems: 'center', marginBottom: 25 },
+  pointsText: { fontFamily: "Anton", fontSize: 16, marginLeft: 8, color: '#000' },
   formSection: { marginBottom: 20 },
   inputGroup: { marginBottom: 15 },
-  label: { fontFamily: "Anton", fontSize: 12, color: "#666", marginBottom: 5, textTransform: "uppercase" },
-  inputWrapper: { borderWidth: 1, borderColor: "#DDD", borderRadius: 10, backgroundColor: "#FFF" },
-  input: { fontFamily: "Anton", padding: 12, fontSize: 16, color: "#000" },
+  label: { fontFamily: "Anton", fontSize: 13, color: "#333", marginBottom: 6, textTransform: "uppercase" },
+  inputWrapper: { borderWidth: 2, borderColor: "#EEE", borderRadius: 12, backgroundColor: "#FFF" },
+  input: { fontFamily: "Anton", padding: 14, fontSize: 16, color: "#000" },
   inputError: { borderColor: "#FF4444" },
-  disabledInput: { backgroundColor: "#F5F5F5" },
-  errorText: { color: "#FF4444", fontSize: 11, marginTop: 3, fontFamily: "Anton" },
-  infoText: { color: "#4CAF50", textAlign: "center", marginBottom: 15, fontFamily: "Anton" },
-  primaryButton: { backgroundColor: colors.primary, borderRadius: 12, padding: 16, alignItems: "center", marginBottom: 10 },
-  primaryButtonText: { fontFamily: "Anton", fontSize: 18, color: "#000" },
-  secondaryButton: { borderWidth: 2, borderColor: colors.primary, borderRadius: 12, padding: 16, alignItems: "center", marginBottom: 30 },
-  secondaryButtonText: { fontFamily: "Anton", fontSize: 16, color: colors.primary },
-  adminBtn: { flexDirection: 'row', backgroundColor: '#eee', padding: 15, borderRadius: 12, alignItems: 'center', justifyContent: 'center', marginTop: 10 },
-  adminBtnText: { fontFamily: "Anton", marginLeft: 10 },
-  deleteBtn: { alignSelf: 'center' },
-  deleteBtnText: { fontFamily: "Anton", color: "#FF4444", textDecorationLine: 'underline' },
-  modalOverlay: { flex: 1, backgroundColor: 'rgba(0,0,0,0.5)', justifyContent: 'center', padding: 20 },
-  modalContent: { backgroundColor: '#FFF', borderRadius: 20, padding: 25 },
-  modalTitle: { fontFamily: "Anton", fontSize: 20, marginBottom: 10 },
-  modalDesc: { fontSize: 14, color: '#666', marginBottom: 20 },
-  modalInput: { borderWidth: 1, borderColor: '#DDD', borderRadius: 10, padding: 12, marginBottom: 20 },
-  modalButtons: { flexDirection: 'row', gap: 10 },
+  disabledInput: { backgroundColor: "#F9F9F9", borderColor: '#EEE' },
+  errorText: { color: "#FF4444", fontSize: 12, marginTop: 4, fontFamily: "Anton" },
+  successBox: { backgroundColor: '#E8F5E9', padding: 15, borderRadius: 12, marginBottom: 20 },
+  successText: { color: '#2E7D32', textAlign: 'center', fontFamily: "Anton" },
+  errorBox: { backgroundColor: '#FFEBEE', padding: 15, borderRadius: 12, marginBottom: 20 },
+  primaryButton: { backgroundColor: colors.primary, borderRadius: 15, padding: 18, alignItems: "center", marginBottom: 12, elevation: 2 },
+  primaryButtonText: { fontFamily: "Anton", fontSize: 20, color: "#000" },
+  secondaryButton: { borderWidth: 2, borderColor: colors.primary, borderRadius: 15, padding: 18, alignItems: "center", marginBottom: 40 },
+  secondaryButtonText: { fontFamily: "Anton", fontSize: 18, color: colors.primary },
+  adminBtn: { flexDirection: 'row', backgroundColor: '#000', padding: 18, borderRadius: 15, alignItems: 'center', justifyContent: 'center', marginTop: 15 },
+  adminBtnText: { fontFamily: "Anton", color: colors.primary, marginLeft: 10, fontSize: 16 },
+  deleteBtn: { alignSelf: 'center', padding: 10 },
+  deleteBtnText: { fontFamily: "Anton", color: "#FF4444", textDecorationLine: 'underline', fontSize: 13 },
+  modalOverlay: { flex: 1, backgroundColor: 'rgba(0,0,0,0.7)', justifyContent: 'center', padding: 20 },
+  modalContent: { backgroundColor: '#FFF', borderRadius: 25, padding: 30 },
+  modalTitle: { fontFamily: "Anton", fontSize: 24, marginBottom: 15, color: '#000' },
+  modalDesc: { fontSize: 15, color: '#666', marginBottom: 25, lineHeight: 20 },
+  modalInput: { borderWidth: 2, borderColor: '#EEE', borderRadius: 12, padding: 15, marginBottom: 25, fontFamily: 'Anton' },
+  modalButtons: { flexDirection: 'row', gap: 15 },
   modalCancel: { flex: 1, padding: 15, alignItems: 'center' },
-  modalCancelText: { fontFamily: "Anton", color: '#666' },
-  modalDelete: { flex: 1, backgroundColor: '#FF4444', padding: 15, borderRadius: 10, alignItems: 'center' },
-  modalDeleteText: { fontFamily: "Anton", color: '#FFF' }
+  modalCancelText: { fontFamily: "Anton", color: '#999', fontSize: 16 },
+  modalDelete: { flex: 1, backgroundColor: '#FF4444', padding: 15, borderRadius: 12, alignItems: 'center' },
+  modalDeleteText: { fontFamily: "Anton", color: '#FFF', fontSize: 16 }
 });

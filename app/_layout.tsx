@@ -7,6 +7,7 @@ import { AuthProvider } from '../src/context/AuthContext';
 import { ThemeProvider } from '../src/context/ThemeContext';
 import AuthGate from '../src/components/auth/AuthGate';
 import { applyGlobalAntonFont } from '../src/theme/applyGlobalTextStyle';
+import '../src/theme/global.css';
 
 SplashScreen.preventAutoHideAsync().catch(() => {});
 

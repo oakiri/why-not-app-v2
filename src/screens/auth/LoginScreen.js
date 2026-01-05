@@ -38,13 +38,10 @@ export default function LoginScreen() {
     try {
       const { user } = await signInWithEmailAndPassword(auth, email.trim(), password);
 
-      // Si no está verificado, lo mandamos a la pantalla de verificación
       if (!user.emailVerified) {
         router.replace('/(auth)/verify-email');
         return;
       }
-
-      // AuthGate se encargará de la redirección final basada en el rol
     } catch (e) {
       setError(mapAuthErrorMessage(e));
     } finally {
@@ -58,41 +55,47 @@ export default function LoginScreen() {
         behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
         style={{ width: '100%' }}
       >
-        <Text style={styles.title}>Iniciar sesión</Text>
+        <Text style={styles.title}>INICIAR SESIÓN</Text>
 
         {error ? <Text style={styles.errorText}>{error}</Text> : null}
         {info ? <Text style={styles.infoText}>{info}</Text> : null}
 
-        <TextInput
-          placeholder="Correo electrónico"
-          placeholderTextColor="#999"
-          autoCapitalize="none"
-          keyboardType="email-address"
-          style={styles.input}
-          value={email}
-          onChangeText={setEmail}
-        />
-
-        <View style={styles.passwordContainer}>
+        <View style={styles.inputGroup}>
+          <Text style={styles.label}>EMAIL</Text>
           <TextInput
-            placeholder="Contraseña"
+            placeholder="tu@email.com"
             placeholderTextColor="#999"
-            secureTextEntry={!showPassword}
-            style={[styles.input, { flex: 1, marginBottom: 0 }]}
-            value={password}
-            onChangeText={setPassword}
+            autoCapitalize="none"
+            keyboardType="email-address"
+            style={styles.input}
+            value={email}
+            onChangeText={setEmail}
           />
-          <TouchableOpacity 
-            onPress={() => setShowPassword((prev) => !prev)}
-            style={styles.eyeIcon}
-          >
-            <Ionicons name={showPassword ? 'eye-off' : 'eye'} size={20} color="#888" />
-          </TouchableOpacity>
+        </View>
+
+        <View style={styles.inputGroup}>
+          <Text style={styles.label}>CONTRASEÑA</Text>
+          <View style={styles.passwordContainer}>
+            <TextInput
+              placeholder="••••••••"
+              placeholderTextColor="#999"
+              secureTextEntry={!showPassword}
+              style={[styles.input, { flex: 1, marginBottom: 0 }]}
+              value={password}
+              onChangeText={setPassword}
+            />
+            <TouchableOpacity 
+              onPress={() => setShowPassword((prev) => !prev)}
+              style={styles.eyeIcon}
+            >
+              <Ionicons name={showPassword ? 'eye-off' : 'eye'} size={20} color="#888" />
+            </TouchableOpacity>
+          </View>
         </View>
 
         <TouchableOpacity onPress={() => router.push('/(auth)/forgot-password')} style={styles.forgotPassword}>
           <Text style={styles.forgotPasswordText}>
-            ¿Olvidaste tu contraseña?
+            ¿OLVIDASTE TU CONTRASEÑA?
           </Text>
         </TouchableOpacity>
 
@@ -101,17 +104,15 @@ export default function LoginScreen() {
           disabled={loading}
           style={styles.button}
         >
-          {loading ? <ActivityIndicator color="#000" /> : <Text style={styles.buttonText}>Entrar</Text>}
+          {loading ? <ActivityIndicator color="#000" /> : <Text style={styles.buttonText}>ENTRAR</Text>}
         </TouchableOpacity>
 
         <View style={styles.footer}>
-          <Text style={styles.footerText}>¿No tienes cuenta?</Text>
+          <Text style={styles.footerText}>¿NO TIENES CUENTA?</Text>
           <TouchableOpacity onPress={() => router.push('/(auth)/register')}>
-            <Text style={styles.linkText}>Crear cuenta</Text>
+            <Text style={styles.linkText}>CREAR CUENTA</Text>
           </TouchableOpacity>
         </View>
-
-
       </KeyboardAvoidingView>
     </AuthLayout>
   );
@@ -120,19 +121,28 @@ export default function LoginScreen() {
 const styles = StyleSheet.create({
   title: {
     fontFamily: 'Anton',
-    fontSize: 32,
+    fontSize: 36,
     color: '#000',
-    marginBottom: 24,
+    marginBottom: 30,
     textAlign: 'center',
+  },
+  inputGroup: {
+    marginBottom: 15,
+  },
+  label: {
+    fontFamily: 'Anton',
+    fontSize: 12,
+    color: '#666',
+    marginBottom: 6,
+    marginLeft: 4,
   },
   input: {
     fontFamily: 'Anton',
-    borderWidth: 1,
-    borderColor: '#DDD',
+    borderWidth: 2,
+    borderColor: '#EEE',
     borderRadius: 12,
     paddingHorizontal: 15,
-    paddingVertical: 12,
-    marginBottom: 12,
+    paddingVertical: 14,
     fontSize: 16,
     color: '#000',
     backgroundColor: '#FFF',
@@ -140,7 +150,6 @@ const styles = StyleSheet.create({
   passwordContainer: {
     flexDirection: 'row',
     alignItems: 'center',
-    marginBottom: 12,
   },
   eyeIcon: {
     position: 'absolute',
@@ -150,30 +159,30 @@ const styles = StyleSheet.create({
   },
   forgotPassword: {
     alignSelf: 'flex-end',
-    marginBottom: 24,
+    marginBottom: 25,
   },
   forgotPasswordText: {
     fontFamily: 'Anton',
     color: colors.primary,
-    fontSize: 14,
+    fontSize: 13,
   },
   button: {
     backgroundColor: colors.primary,
-    borderRadius: 12,
-    paddingVertical: 16,
+    borderRadius: 15,
+    paddingVertical: 18,
     alignItems: 'center',
-    marginBottom: 24,
+    marginBottom: 25,
     elevation: 2,
   },
   buttonText: {
     fontFamily: 'Anton',
-    fontSize: 18,
+    fontSize: 20,
     color: '#000',
   },
   footer: {
     flexDirection: 'row',
     justifyContent: 'center',
-    marginBottom: 32,
+    marginBottom: 20,
   },
   footerText: {
     fontFamily: 'Anton',
@@ -186,28 +195,16 @@ const styles = StyleSheet.create({
     marginLeft: 8,
     fontSize: 14,
   },
-  employeeLink: {
-    alignItems: 'center',
-    padding: 10,
-    borderTopWidth: 1,
-    borderTopColor: '#EEE',
-  },
-  employeeLinkText: {
-    fontFamily: 'Anton',
-    color: '#999',
-    fontSize: 12,
-    textTransform: 'uppercase',
-  },
   errorText: {
     fontFamily: 'Anton',
-    color: 'red',
-    marginBottom: 12,
+    color: '#FF4444',
+    marginBottom: 15,
     textAlign: 'center',
   },
   infoText: {
     fontFamily: 'Anton',
-    color: 'green',
-    marginBottom: 12,
+    color: '#4CAF50',
+    marginBottom: 15,
     textAlign: 'center',
   },
 });

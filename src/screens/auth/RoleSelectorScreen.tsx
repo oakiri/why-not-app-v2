@@ -13,12 +13,12 @@ export default function RoleSelectorScreen() {
     <View style={styles.container}>
       <View style={styles.header}>
         <Image 
-          source={require('../../../assets/logo.png')} 
+          source={require('../../../assets/images/logo.png')} 
           style={styles.logo}
           resizeMode="contain"
         />
         <Text style={styles.title}>¿QUÉ QUIERES HACER HOY?</Text>
-        <Text style={styles.subtitle}>Has iniciado sesión como personal autorizado</Text>
+        <Text style={styles.subtitle}>HAS INICIADO SESIÓN COMO PERSONAL AUTORIZADO</Text>
       </View>
 
       <View style={styles.options}>
@@ -30,7 +30,7 @@ export default function RoleSelectorScreen() {
             <Ionicons name="fast-food" size={40} color="#000" />
           </View>
           <Text style={styles.cardTitle}>APP CLIENTE</Text>
-          <Text style={styles.cardDesc}>Ver el menú y realizar pedidos como un cliente</Text>
+          <Text style={styles.cardDesc}>VER EL MENÚ Y REALIZAR PEDIDOS COMO UN CLIENTE</Text>
         </TouchableOpacity>
 
         <TouchableOpacity 
@@ -41,7 +41,7 @@ export default function RoleSelectorScreen() {
             <Ionicons name="stats-chart" size={40} color={colors.primary} />
           </View>
           <Text style={[styles.cardTitle, styles.textWhite]}>BACKOFFICE</Text>
-          <Text style={[styles.cardDesc, styles.textGray]}>Gestionar pedidos, menú y equipo</Text>
+          <Text style={[styles.cardDesc, styles.textGray]}>GESTIONAR PEDIDOS, MENÚ Y EQUIPO</Text>
         </TouchableOpacity>
       </View>
 
@@ -52,7 +52,7 @@ export default function RoleSelectorScreen() {
           router.replace('/(auth)/login');
         }}
       >
-        <Text style={styles.logoutText}>Cerrar sesión</Text>
+        <Text style={styles.logoutText}>CERRAR SESIÓN</Text>
       </TouchableOpacity>
     </View>
   );
@@ -63,27 +63,23 @@ const styles = StyleSheet.create({
   header: { alignItems: 'center', marginBottom: 40 },
   logo: { width: 120, height: 120, marginBottom: 20 },
   title: { fontFamily: 'Anton', fontSize: 28, color: '#000', textAlign: 'center' },
-  subtitle: { fontSize: 14, color: '#666', marginTop: 5 },
+  subtitle: { fontFamily: 'Anton', fontSize: 12, color: '#666', marginTop: 8, textAlign: 'center' },
   options: { gap: 20 },
   card: { 
     backgroundColor: '#F8F8F8', 
     borderRadius: 20, 
     padding: 25, 
     alignItems: 'center',
-    borderWidth: 1,
+    borderWidth: 2,
     borderColor: '#EEE',
     elevation: 3,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.1,
-    shadowRadius: 4,
   },
   cardDark: { backgroundColor: '#1A1A1A', borderColor: '#333' },
   iconContainer: { width: 80, height: 80, borderRadius: 40, justifyContent: 'center', alignItems: 'center', marginBottom: 15 },
-  cardTitle: { fontFamily: 'Anton', fontSize: 22, color: '#000' },
-  cardDesc: { fontSize: 12, color: '#666', textAlign: 'center', marginTop: 5, paddingHorizontal: 20 },
+  cardTitle: { fontFamily: 'Anton', fontSize: 24, color: '#000' },
+  cardDesc: { fontFamily: 'Anton', fontSize: 11, color: '#666', textAlign: 'center', marginTop: 8, paddingHorizontal: 20 },
   textWhite: { color: '#FFF' },
   textGray: { color: '#999' },
   logout: { marginTop: 40, alignSelf: 'center' },
-  logoutText: { fontFamily: 'Anton', color: '#FF4444', fontSize: 16 },
+  logoutText: { fontFamily: 'Anton', color: '#FF4444', fontSize: 16, textDecorationLine: 'underline' },
 });
