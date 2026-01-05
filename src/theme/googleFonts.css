@@ -1,11 +1,3 @@
 @import url('https://fonts.googleapis.com/css2?family=Anton&display=swap');
 
-/* Aplicar la fuente Anton solo a elementos de texto y inputs, protegiendo los iconos */
-body, p, span, div, h1, h2, h3, h4, h5, h6, button, a, li {
-    font-family: 'Anton', sans-serif !important;
-}
-
-/* Forzar la fuente Anton en todos los inputs de texto en la versión Web */
-input[type="text"], input[type="email"], input[type="password"], input[type="tel"], input[type="number"] {
-    font-family: 'Anton', sans-serif !important;
-}
+/* La fuente Anton se aplicará ahora solo a través de los componentes de React Native (AntonText) para proteger los iconos. */

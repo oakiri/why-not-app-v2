@@ -266,7 +266,7 @@ const styles = StyleSheet.create({
   title: { fontSize: 36, color: "#000", marginBottom: 30, textAlign: "center" },
   formSection: { marginBottom: 25 },
   inputGroup: { marginBottom: 18 },
-  row: { flexDirection: 'row', gap: 15, alignItems: 'flex-start' },
+  row: { flexDirection: 'row', gap: 15, alignItems: 'center' },
   label: { fontSize: 13, color: "#333", marginBottom: 8, textTransform: "uppercase" },
   inputWrapper: { borderWidth: 2, borderColor: "#EEE", borderRadius: 12, backgroundColor: "#FFF" },
   input: { padding: 14, fontSize: 16, color: "#000", fontFamily: "Anton" },
