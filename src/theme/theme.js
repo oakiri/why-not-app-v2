@@ -19,7 +19,7 @@ export const typography = {
     textTransform: 'uppercase',
   },
   body: {
-    fontFamily: 'System',
+    fontFamily: 'Anton',
     fontSize: 14,
   },
 };

@@ -64,6 +64,6 @@ const styles = StyleSheet.create({
   },
   label: { fontFamily: 'Anton', fontSize: 14, color: '#666' },
   selectedText: { color: '#000' },
-  description: { fontSize: 11, color: '#999', marginTop: 2 },
+  description: { fontFamily: 'Anton', fontSize: 11, color: '#999', marginTop: 2 },
   indicator: { width: 12, height: 12, borderRadius: 6 },
 });

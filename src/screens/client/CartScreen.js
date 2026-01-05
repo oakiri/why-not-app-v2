@@ -1,6 +1,6 @@
 import React from 'react';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { View, Text, StyleSheet, FlatList, TouchableOpacity, Image, Alert } from 'react-native';
+import { View, Text, StyleSheet, FlatList, TouchableOpacity, Alert, Platform } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { router } from 'expo-router';
 import { colors } from '../../theme/theme';
@@ -10,6 +10,15 @@ const CartScreen = () => {
   const { items, addItem, removeItem, deleteItem, clearCart } = useCartStore();
 
   const total = items.reduce((acc, item) => acc + (item.price || 0) * (item.quantity || 1), 0);
+
+  const handleCheckout = () => {
+    const message = "El sistema de pago se activará en la siguiente fase.";
+    if (Platform.OS === 'web') {
+      window.alert(message);
+    } else {
+      Alert.alert("Próximamente", message);
+    }
+  };
 
   const renderItem = ({ item }) => (
     <View style={styles.item}>
@@ -51,7 +60,7 @@ const CartScreen = () => {
         <Text style={styles.headerTitle}>TU CARRITO</Text>
         {items.length > 0 && (
           <TouchableOpacity onPress={clearCart}>
-            <Text style={styles.clearText}>Vaciar</Text>
+            <Text style={styles.clearText}>VACIAR</Text>
           </TouchableOpacity>
         )}
       </View>
@@ -59,7 +68,7 @@ const CartScreen = () => {
       {items.length === 0 ? (
         <View style={styles.emptyContainer}>
           <Ionicons name="cart-outline" size={80} color="#EEE" />
-          <Text style={styles.emptyText}>Tu carrito está vacío</Text>
+          <Text style={styles.emptyText}>TU CARRITO ESTÁ VACÍO</Text>
           <TouchableOpacity 
             style={styles.browseButton}
             onPress={() => router.push('/(tabs)/menu')}
@@ -85,7 +94,7 @@ const CartScreen = () => {
             
             <TouchableOpacity 
               style={styles.checkoutButton}
-              onPress={() => Alert.alert("Próximamente", "El sistema de pago se activará en la siguiente fase.")}
+              onPress={handleCheckout}
             >
               <Text style={styles.checkoutButtonText}>FINALIZAR PEDIDO</Text>
               <Ionicons name="arrow-forward" size={20} color="#000" />
@@ -115,7 +124,7 @@ const styles = StyleSheet.create({
   },
   itemInfo: { flex: 1 },
   itemName: { fontFamily: 'Anton', fontSize: 16, color: '#000', marginBottom: 4 },
-  itemPrice: { fontSize: 14, color: '#666', fontWeight: '600' },
+  itemPrice: { fontFamily: 'Anton', fontSize: 14, color: '#666' },
   quantityContainer: { flexDirection: 'row', alignItems: 'center', gap: 10 },
   qtyButton: { 
     width: 32, 

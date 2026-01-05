@@ -1,13 +1,13 @@
 import React from 'react';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { View, Text, FlatList, StyleSheet, Pressable } from 'react-native';
-import { colors, typography } from '../../theme/theme';
+import { colors } from '../../theme/theme';
 import useCartStore from '../../store/cartStore';
 
 const PRODUCTS = [
-  { id: '1', name: 'Classic WHY NOT', description: 'Carne, queso cheddar, lechuga y salsa especial.', price: 8.99 },
-  { id: '2', name: 'BBQ Lovers', description: 'Doble carne, bacon crujiente y salsa BBQ.', price: 10.5 },
-  { id: '3', name: 'Vegan Dream', description: 'Hamburguesa vegetal con aguacate y hummus.', price: 9.25 },
+  { id: '1', name: 'CLASSIC WHY NOT', description: 'Carne, queso cheddar, lechuga y salsa especial.', price: 8.99 },
+  { id: '2', name: 'BBQ LOVERS', description: 'Doble carne, bacon crujiente y salsa BBQ.', price: 10.5 },
+  { id: '3', name: 'VEGAN DREAM', description: 'Hamburguesa vegetal con aguacate y hummus.', price: 9.25 },
 ];
 
 const MenuScreen = () => {
@@ -16,24 +16,25 @@ const MenuScreen = () => {
   const renderItem = ({ item }) => (
     <View style={styles.card}>
       <View style={styles.textContainer}>
-        <Text style={[styles.title, typography.title]}>{item.name}</Text>
+        <Text style={styles.title}>{item.name}</Text>
         <Text style={styles.description}>{item.description}</Text>
-        <Text style={styles.price}>{`$${item.price.toFixed(2)}`}</Text>
+        <Text style={styles.price}>{`${item.price.toFixed(2)}€`}</Text>
       </View>
       <Pressable style={styles.button} onPress={() => addItem(item)}>
-        <Text style={styles.buttonText}>Agregar</Text>
+        <Text style={styles.buttonText}>AGREGAR AL CARRITO</Text>
       </Pressable>
     </View>
   );
 
   return (
     <SafeAreaView style={styles.container}>
-      <Text style={[styles.header, typography.title]}>Hamburguesas destacadas</Text>
+      <Text style={styles.header}>HAMBURGUESAS DESTACADAS</Text>
       <FlatList
         data={PRODUCTS}
         keyExtractor={(item) => item.id}
         renderItem={renderItem}
         contentContainerStyle={styles.list}
+        showsVerticalScrollIndicator={false}
       />
     </SafeAreaView>
   );
@@ -42,51 +43,64 @@ const MenuScreen = () => {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: colors.background,
-    paddingHorizontal: 16,
+    backgroundColor: '#FFF',
+    paddingHorizontal: 20,
   },
   header: {
+    fontFamily: 'Anton',
+    fontSize: 28,
     color: colors.primary,
-    marginBottom: 12,
+    marginTop: 10,
+    marginBottom: 20,
+    textAlign: 'center',
   },
   list: {
-    gap: 12,
-    paddingBottom: 24,
+    paddingBottom: 40,
   },
   card: {
-    backgroundColor: colors.card,
-    borderRadius: 12,
-    padding: 16,
+    backgroundColor: '#F9F9F9',
+    borderRadius: 20,
+    padding: 20,
+    marginBottom: 15,
     borderWidth: 1,
-    borderColor: colors.primary,
+    borderColor: '#EEE',
+    elevation: 2,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.05,
+    shadowRadius: 10,
   },
   textContainer: {
-    marginBottom: 12,
+    marginBottom: 15,
   },
   title: {
-    color: colors.text,
-    marginBottom: 4,
+    fontFamily: 'Anton',
+    fontSize: 22,
+    color: '#000',
+    marginBottom: 6,
   },
   description: {
-    color: colors.textMuted,
-    fontSize: 14,
-    marginBottom: 8,
+    fontFamily: 'Anton',
+    fontSize: 13,
+    color: '#666',
+    marginBottom: 10,
+    lineHeight: 18,
   },
   price: {
+    fontFamily: 'Anton',
+    fontSize: 18,
     color: colors.primary,
-    fontSize: 16,
-    fontWeight: '600',
   },
   button: {
     backgroundColor: colors.primary,
-    paddingVertical: 10,
-    borderRadius: 10,
+    paddingVertical: 14,
+    borderRadius: 12,
     alignItems: 'center',
   },
   buttonText: {
-    color: colors.text,
-    fontSize: 16,
-    fontWeight: '700',
+    fontFamily: 'Anton',
+    color: '#000',
+    fontSize: 15,
   },
 });
 

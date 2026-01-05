@@ -98,7 +98,7 @@ const styles = StyleSheet.create({
   content: { flex: 1, padding: 30, alignItems: 'center', justifyContent: 'center' },
   logo: { width: 120, height: 120, marginBottom: 20 },
   title: { fontFamily: 'Anton', fontSize: 28, color: '#000', marginBottom: 15, textAlign: 'center' },
-  description: { fontSize: 16, color: '#666', textAlign: 'center', lineHeight: 22, marginBottom: 30 },
+  description: { fontFamily: 'Anton', fontSize: 14, color: '#666', textAlign: 'center', lineHeight: 20, marginBottom: 30 },
   input: { width: '100%', fontFamily: 'Anton', backgroundColor: '#F8F8F8', borderWidth: 1, borderColor: '#EEE', borderRadius: 12, padding: 15, fontSize: 16, marginBottom: 20, color: '#000' },
   button: { backgroundColor: colors.primary, width: '100%', padding: 18, borderRadius: 15, alignItems: 'center', elevation: 3 },
   buttonText: { fontFamily: 'Anton', fontSize: 18, color: '#000' },
