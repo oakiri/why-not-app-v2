@@ -33,7 +33,7 @@ export default function ProfileScreen() {
   const [errors, setErrors] = useState({});
   const [info, setInfo] = useState("");
   const [reauthVisible, setReauthVisible] = useState(false);
-  const [reauthAction, setReauthAction] = useState(null); // 'delete', 'password', 'email'
+  const [reauthAction, setReauthAction] = useState(null); 
   const [password, setPassword] = useState("");
   const [newPassword, setNewPassword] = useState("");
   const [newEmail, setNewEmail] = useState("");
@@ -157,11 +157,6 @@ export default function ProfileScreen() {
       <ScrollView contentContainerStyle={styles.scrollContent}>
         <Text style={styles.title}>MI PERFIL</Text>
         
-        <View style={styles.pointsBadge}>
-          <Ionicons name="star" size={20} color="#000" />
-          <Text style={styles.pointsText}>{profile?.points || 0} PUNTOS WHY NOT</Text>
-        </View>
-
         {info ? <View style={styles.successBox}><Text style={styles.successText}>{info}</Text></View> : null}
 
         <View style={styles.formSection}>
@@ -194,7 +189,7 @@ export default function ProfileScreen() {
             style={styles.actionBtn} 
             onPress={() => { setReauthAction('password'); setReauthVisible(true); }}
           >
-            <Ionicons name="key-outline" size={20} color="#000" />
+            <Ionicons name="key-outline" size={24} color="#000" />
             <Text style={styles.actionBtnText}>CAMBIAR CONTRASEÑA</Text>
           </TouchableOpacity>
 
@@ -203,7 +198,7 @@ export default function ProfileScreen() {
               style={[styles.actionBtn, { backgroundColor: '#000' }]} 
               onPress={() => router.replace("/(auth)/role-selector")}
             >
-              <Ionicons name="settings-outline" size={20} color={colors.primary} />
+              <Ionicons name="settings-outline" size={24} color={colors.primary} />
               <Text style={[styles.actionBtnText, { color: colors.primary }]}>PANEL CONTROL</Text>
             </TouchableOpacity>
           )}
@@ -263,9 +258,7 @@ const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: "#FFF" },
   scrollContent: { padding: 24, paddingBottom: 60 },
   centered: { flex: 1, justifyContent: "center", alignItems: "center" },
-  title: { fontFamily: "Anton", fontSize: 36, color: "#000", marginBottom: 10, textAlign: "center" },
-  pointsBadge: { backgroundColor: colors.primary, flexDirection: 'row', padding: 12, borderRadius: 25, alignSelf: 'center', alignItems: 'center', marginBottom: 25 },
-  pointsText: { fontFamily: "Anton", fontSize: 16, marginLeft: 8, color: '#000' },
+  title: { fontFamily: "Anton", fontSize: 36, color: "#000", marginBottom: 30, textAlign: "center" },
   formSection: { marginBottom: 20 },
   inputGroup: { marginBottom: 15 },
   label: { fontFamily: "Anton", fontSize: 13, color: "#333", marginBottom: 6, textTransform: "uppercase" },

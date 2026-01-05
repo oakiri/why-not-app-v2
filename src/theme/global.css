@@ -1,24 +1,7 @@
 /* 
-  Forzamos la fuente Anton globalmente pero EXCLUIMOS los iconos.
-  Los iconos de Expo suelen usar clases específicas o componentes que no deben ser sobreescritos.
+  Eliminamos el forzado global de fuentes para evitar romper los iconos.
+  La fuente Anton se aplicará directamente en los componentes de texto.
 */
-
-* {
-  font-family: 'Anton', sans-serif !important;
-}
-
-/* Excluir explícitamente elementos que suelen contener iconos */
-[class*="Ionicons"], 
-[class*="MaterialIcons"],
-[style*="font-family: Ionicons"],
-[style*="font-family: MaterialIcons"],
-i, span.icon {
-  font-family: inherit !important;
-}
-
-input, textarea, button, select {
-  font-family: 'Anton', sans-serif !important;
-}
 
 body {
   margin: 0;

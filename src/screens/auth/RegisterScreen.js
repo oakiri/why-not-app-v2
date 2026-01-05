@@ -22,7 +22,6 @@ import { colors } from '../../theme/theme';
 import { mapAuthErrorMessage } from '../../utils/authErrorMessages';
 import CustomPicker from '../../components/ui/CustomPicker';
 
-// Códigos postales válidos de Jerez de la Frontera
 const JEREZ_ZIP_CODES = [
   '11401', '11402', '11403', '11404', '11405', '11406', '11407', '11408', '11409',
   '11570', '11580', '11590', '11591', '11592', '11593', '11594', '11595', '11596'
@@ -46,73 +45,46 @@ export default function RegisterScreen() {
     postalCode: '',
   });
 
-  const cityOptions = [
-    { label: 'Jerez de la Frontera', value: 'Jerez de la Frontera' }
-  ];
-
-  const provinceOptions = [
-    { label: 'Cádiz', value: 'Cádiz' }
-  ];
-
   const validate = () => {
     let newErrors = {};
-
     if (!formData.email.trim()) newErrors.email = 'El email es obligatorio';
     else if (!/\S+@\S+\.\S+/.test(formData.email)) newErrors.email = 'Email no válido';
-
     if (!formData.password) newErrors.password = 'La contraseña es obligatoria';
     else if (formData.password.length < 6) newErrors.password = 'Mínimo 6 caracteres';
-
-    if (formData.password !== formData.confirmPassword) {
-      newErrors.confirmPassword = 'Las contraseñas no coinciden';
-    }
-
+    if (formData.password !== formData.confirmPassword) newErrors.confirmPassword = 'Las contraseñas no coinciden';
     if (!formData.name.trim()) newErrors.name = 'El nombre es obligatorio';
-    
     if (!formData.phone.trim()) newErrors.phone = 'El teléfono es obligatorio';
     else if (!/^\d{9}$/.test(formData.phone.trim())) newErrors.phone = 'Debe tener 9 dígitos';
-
     if (!formData.address.trim()) newErrors.address = 'La dirección es obligatoria';
-
     if (!formData.postalCode.trim()) newErrors.postalCode = 'El C.P. es obligatorio';
     else if (!JEREZ_ZIP_CODES.includes(formData.postalCode.trim())) {
       newErrors.postalCode = 'C.P. no válido para Jerez';
     }
-
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
   };
 
   const handleRegister = async () => {
     if (!validate()) return;
-
     setLoading(true);
     try {
       const { user } = await createUserWithEmailAndPassword(auth, formData.email.trim(), formData.password);
-
-      // Enviar verificación
-      void sendEmailVerification(user);
-
-      await setDoc(
-        doc(db, 'users', user.uid),
-        {
-          uid: user.uid,
-          email: user.email,
-          name: formData.name.trim(),
-          phone: formData.phone.trim(),
-          role: 'cliente',
-          address: {
-            line1: formData.address.trim(),
-            city: formData.city,
-            province: formData.province,
-            postalCode: formData.postalCode.trim(),
-          },
-          createdAt: serverTimestamp(),
-          updatedAt: serverTimestamp(),
+      await sendEmailVerification(user);
+      await setDoc(doc(db, 'users', user.uid), {
+        uid: user.uid,
+        email: user.email,
+        name: formData.name.trim(),
+        phone: formData.phone.trim(),
+        role: 'cliente',
+        address: {
+          line1: formData.address.trim(),
+          city: formData.city,
+          province: formData.province,
+          postalCode: formData.postalCode.trim(),
         },
-        { merge: true }
-      );
-
+        createdAt: serverTimestamp(),
+        updatedAt: serverTimestamp(),
+      });
       router.replace('/(auth)/verify-email');
     } catch (e) {
       console.error(e);
@@ -154,69 +126,42 @@ export default function RegisterScreen() {
 
   return (
     <AuthLayout>
-      <KeyboardAvoidingView 
-        behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
-        style={{ flex: 1, width: '100%' }}
-      >
-        <ScrollView 
-          showsVerticalScrollIndicator={false}
-          contentContainerStyle={{ paddingBottom: 40 }}
-        >
+      <KeyboardAvoidingView behavior={Platform.OS === 'ios' ? 'padding' : 'height'} style={{ flex: 1 }}>
+        <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={{ paddingBottom: 40 }}>
           <Text style={styles.title}>CREAR CUENTA</Text>
-
           {errors.general && <Text style={styles.generalError}>{errors.general}</Text>}
-
           <View style={styles.section}>
             <Text style={styles.sectionLabel}>Datos de acceso</Text>
             {renderInput("Correo electrónico", "email", { keyboardType: "email-address" })}
             {renderInput("Contraseña", "password", { secure: true })}
             {renderInput("Confirmar contraseña", "confirmPassword", { secure: true })}
           </View>
-
           <View style={styles.section}>
             <Text style={styles.sectionLabel}>Datos personales</Text>
             {renderInput("Nombre completo", "name", { autoCapitalize: "words" })}
             {renderInput("Teléfono (9 dígitos)", "phone", { keyboardType: "phone-pad", maxLength: 9 })}
           </View>
-
           <View style={styles.section}>
             <Text style={styles.sectionLabel}>Dirección de entrega</Text>
             {renderInput("Dirección (Calle, número, piso...)", "address")}
-            
             <View style={{ flexDirection: 'row', gap: 10, marginBottom: 12 }}>
               <View style={{ flex: 1 }}>
                 <CustomPicker
-                  options={cityOptions}
+                  options={[{ label: 'Jerez de la Frontera', value: 'Jerez de la Frontera' }]}
                   selectedValue={formData.city}
                   onValueChange={(v) => setFormData({ ...formData, city: v })}
-                  style={{ marginBottom: 0 }}
                 />
               </View>
               <View style={{ width: 100 }}>
-                {renderInput("C.P.", "postalCode", { keyboardType: "numeric", maxLength: 5, style: { marginBottom: 0 } })}
+                {renderInput("C.P.", "postalCode", { keyboardType: "numeric", maxLength: 5 })}
               </View>
             </View>
-
-            <CustomPicker
-              options={provinceOptions}
-              selectedValue={formData.province}
-              onValueChange={(v) => setFormData({ ...formData, province: v })}
-              style={{ marginBottom: 0 }}
-            />
           </View>
-
-          <TouchableOpacity
-            onPress={handleRegister}
-            disabled={loading}
-            style={[styles.button, loading && styles.buttonDisabled]}
-          >
+          <TouchableOpacity onPress={handleRegister} disabled={loading} style={[styles.button, loading && styles.buttonDisabled]}>
             {loading ? <ActivityIndicator color="#000" /> : <Text style={styles.buttonText}>CREAR CUENTA</Text>}
           </TouchableOpacity>
-
           <TouchableOpacity onPress={() => router.replace('/(auth)/login')}>
-            <Text style={styles.linkText}>
-              Ya tengo cuenta → Iniciar sesión
-            </Text>
+            <Text style={styles.linkText}>Ya tengo cuenta → Iniciar sesión</Text>
           </TouchableOpacity>
         </ScrollView>
       </KeyboardAvoidingView>
@@ -229,13 +174,13 @@ const styles = StyleSheet.create({
   section: { marginBottom: 20 },
   sectionLabel: { fontFamily: 'Anton', fontSize: 14, color: colors.primary, marginBottom: 8, textTransform: 'uppercase' },
   inputGroup: { marginBottom: 12 },
-  inputWrapper: { flexDirection: 'row', alignItems: 'center', borderWidth: 1, borderColor: '#DDD', borderRadius: 12, backgroundColor: '#FFF' },
+  inputWrapper: { flexDirection: 'row', alignItems: 'center', borderWidth: 2, borderColor: '#EEE', borderRadius: 12, backgroundColor: '#FFF' },
   input: { flex: 1, fontFamily: 'Anton', paddingHorizontal: 15, paddingVertical: 12, fontSize: 16, color: '#000' },
-  inputError: { borderColor: '#FF4444', backgroundColor: '#FFF5F5' },
+  inputError: { borderColor: '#FF4444' },
   errorText: { color: '#FF4444', fontSize: 12, marginTop: 4, marginLeft: 5, fontFamily: 'Anton' },
   generalError: { backgroundColor: '#FF4444', color: '#FFF', padding: 12, borderRadius: 12, textAlign: 'center', marginBottom: 20, fontFamily: 'Anton' },
   eyeIcon: { paddingHorizontal: 15 },
-  button: { backgroundColor: colors.primary, borderRadius: 12, paddingVertical: 16, alignItems: 'center', marginBottom: 20, elevation: 3, shadowColor: '#000', shadowOffset: { width: 0, height: 2 }, shadowOpacity: 0.2, shadowRadius: 4 },
+  button: { backgroundColor: colors.primary, borderRadius: 15, paddingVertical: 16, alignItems: 'center', marginBottom: 20 },
   buttonDisabled: { opacity: 0.7 },
   buttonText: { fontFamily: 'Anton', fontSize: 18, color: '#000' },
   linkText: { color: colors.primary, fontFamily: 'Anton', textAlign: 'center', fontSize: 16 },
