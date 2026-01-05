@@ -1,7 +1,6 @@
 import React, { useState } from 'react';
 import { 
   View, 
-  Text, 
   TextInput, 
   TouchableOpacity, 
   ActivityIndicator, 
@@ -11,6 +10,7 @@ import {
   KeyboardAvoidingView,
   Platform
 } from 'react-native';
+import AntonText from '../../components/ui/AntonText';
 import { sendPasswordResetEmail } from 'firebase/auth';
 import { auth } from '../../lib/firebase';
 import { colors } from '../../theme/theme';
@@ -65,10 +65,10 @@ export default function ForgotPasswordScreen() {
           resizeMode="contain"
         />
         
-        <Text style={styles.title}>RECUPERAR CONTRASEÑA</Text>
-        <Text style={styles.description}>
+        <AntonText style={styles.title}>RECUPERAR CONTRASEÑA</AntonText>
+        <AntonText style={styles.description}>
           Introduce tu email y te enviaremos un enlace para que puedas crear una nueva contraseña.
-        </Text>
+        </AntonText>
 
         <TextInput
           style={styles.input}
@@ -85,7 +85,7 @@ export default function ForgotPasswordScreen() {
           onPress={handleResetPassword}
           disabled={loading}
         >
-          {loading ? <ActivityIndicator color="#000" /> : <Text style={styles.buttonText}>ENVIAR ENLACE</Text>}
+          {loading ? <ActivityIndicator color="#000" /> : <AntonText style={styles.buttonText}>ENVIAR ENLACE</AntonText>}
         </TouchableOpacity>
       </View>
     </KeyboardAvoidingView>
@@ -97,9 +97,9 @@ const styles = StyleSheet.create({
   backButton: { padding: 20, marginTop: Platform.OS === 'ios' ? 40 : 20 },
   content: { flex: 1, padding: 30, alignItems: 'center', justifyContent: 'center' },
   logo: { width: 120, height: 120, marginBottom: 20 },
-  title: { fontFamily: 'Anton', fontSize: 28, color: '#000', marginBottom: 15, textAlign: 'center' },
-  description: { fontFamily: 'Anton', fontSize: 14, color: '#666', textAlign: 'center', lineHeight: 20, marginBottom: 30 },
-  input: { width: '100%', fontFamily: 'Anton', backgroundColor: '#F8F8F8', borderWidth: 1, borderColor: '#EEE', borderRadius: 12, padding: 15, fontSize: 16, marginBottom: 20, color: '#000' },
+  title: { fontSize: 28, color: '#000', marginBottom: 15, textAlign: 'center' },
+  description: { fontSize: 14, color: '#666', textAlign: 'center', lineHeight: 20, marginBottom: 30 },
+  input: { width: '100%', backgroundColor: '#F8F8F8', borderWidth: 1, borderColor: '#EEE', borderRadius: 12, padding: 15, fontSize: 16, marginBottom: 20, color: '#000' },
   button: { backgroundColor: colors.primary, width: '100%', padding: 18, borderRadius: 15, alignItems: 'center', elevation: 3 },
-  buttonText: { fontFamily: 'Anton', fontSize: 18, color: '#000' },
+  buttonText: { fontSize: 18, color: '#000' },
 });

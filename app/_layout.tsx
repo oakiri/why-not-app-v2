@@ -6,8 +6,8 @@ import { useFonts } from 'expo-font';
 import { AuthProvider } from '../src/context/AuthContext';
 import { ThemeProvider } from '../src/context/ThemeContext';
 import AuthGate from '../src/components/auth/AuthGate';
-import { applyGlobalAntonFont } from '../src/theme/applyGlobalTextStyle';
-import '../src/theme/global.css';
+// import { applyGlobalAntonFont } from '../src/theme/applyGlobalTextStyle'; // Eliminado: Usaremos AntonText.tsx
+// import '../src/theme/global.css'; // Comentado: Posible fuente de conflicto de fuentes
 
 SplashScreen.preventAutoHideAsync().catch(() => {});
 
@@ -18,7 +18,6 @@ export default function RootLayout() {
 
   useEffect(() => {
     if (fontsLoaded) {
-      applyGlobalAntonFont();
       SplashScreen.hideAsync().catch(() => {});
     }
   }, [fontsLoaded]);

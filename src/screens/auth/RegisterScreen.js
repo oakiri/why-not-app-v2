@@ -1,7 +1,6 @@
 import React, { useState } from 'react';
 import { 
   View, 
-  Text, 
   TextInput, 
   TouchableOpacity, 
   ActivityIndicator, 
@@ -11,6 +10,7 @@ import {
   StyleSheet,
   Alert
 } from 'react-native';
+import AntonText from '../../components/ui/AntonText';
 import { router } from 'expo-router';
 import { createUserWithEmailAndPassword, sendEmailVerification } from 'firebase/auth';
 import { doc, setDoc, serverTimestamp } from 'firebase/firestore';
@@ -120,68 +120,68 @@ export default function RegisterScreen() {
           </TouchableOpacity>
         )}
       </View>
-      {errors[field] && <Text style={styles.errorText}>{errors[field]}</Text>}
+      {errors[field] && <AntonText style={styles.errorText}>{errors[field]}</AntonText>}
     </View>
   );
 
-  return (
-    <AuthLayout>
-      <KeyboardAvoidingView behavior={Platform.OS === 'ios' ? 'padding' : 'height'} style={{ flex: 1 }}>
-        <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={{ paddingBottom: 40 }}>
-          <Text style={styles.title}>CREAR CUENTA</Text>
-          {errors.general && <Text style={styles.generalError}>{errors.general}</Text>}
-          <View style={styles.section}>
-            <Text style={styles.sectionLabel}>Datos de acceso</Text>
-            {renderInput("Correo electrónico", "email", { keyboardType: "email-address" })}
-            {renderInput("Contraseña", "password", { secure: true })}
-            {renderInput("Confirmar contraseña", "confirmPassword", { secure: true })}
-          </View>
-          <View style={styles.section}>
-            <Text style={styles.sectionLabel}>Datos personales</Text>
-            {renderInput("Nombre completo", "name", { autoCapitalize: "words" })}
-            {renderInput("Teléfono (9 dígitos)", "phone", { keyboardType: "phone-pad", maxLength: 9 })}
-          </View>
-          <View style={styles.section}>
-            <Text style={styles.sectionLabel}>Dirección de entrega</Text>
-            {renderInput("Dirección (Calle, número, piso...)", "address")}
-            <View style={{ flexDirection: 'row', gap: 10, marginBottom: 12 }}>
-              <View style={{ flex: 1 }}>
-                <CustomPicker
-                  options={[{ label: 'Jerez de la Frontera', value: 'Jerez de la Frontera' }]}
-                  selectedValue={formData.city}
-                  onValueChange={(v) => setFormData({ ...formData, city: v })}
-                />
-              </View>
-              <View style={{ width: 100 }}>
-                {renderInput("C.P.", "postalCode", { keyboardType: "numeric", maxLength: 5 })}
-              </View>
-            </View>
-          </View>
-          <TouchableOpacity onPress={handleRegister} disabled={loading} style={[styles.button, loading && styles.buttonDisabled]}>
-            {loading ? <ActivityIndicator color="#000" /> : <Text style={styles.buttonText}>CREAR CUENTA</Text>}
-          </TouchableOpacity>
-          <TouchableOpacity onPress={() => router.replace('/(auth)/login')}>
-            <Text style={styles.linkText}>Ya tengo cuenta → Iniciar sesión</Text>
-          </TouchableOpacity>
-        </ScrollView>
-      </KeyboardAvoidingView>
-    </AuthLayout>
-  );
+	  return (
+	    <AuthLayout>
+	      <KeyboardAvoidingView behavior={Platform.OS === 'ios' ? 'padding' : 'height'} style={{ flex: 1 }}>
+	        <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={{ paddingBottom: 40 }}>
+	          <AntonText style={styles.title}>CREAR CUENTA</AntonText>
+	          {errors.general && <AntonText style={styles.generalError}>{errors.general}</AntonText>}
+	          <View style={styles.section}>
+	            <AntonText style={styles.sectionLabel}>Datos de acceso</AntonText>
+	            {renderInput("Correo electrónico", "email", { keyboardType: "email-address" })}
+	            {renderInput("Contraseña", "password", { secure: true })}
+	            {renderInput("Confirmar contraseña", "confirmPassword", { secure: true })}
+	          </View>
+	          <View style={styles.section}>
+	            <AntonText style={styles.sectionLabel}>Datos personales</AntonText>
+	            {renderInput("Nombre completo", "name", { autoCapitalize: "words" })}
+	            {renderInput("Teléfono (9 dígitos)", "phone", { keyboardType: "phone-pad", maxLength: 9 })}
+	          </View>
+	          <View style={styles.section}>
+	            <AntonText style={styles.sectionLabel}>Dirección de entrega</AntonText>
+	            {renderInput("Dirección (Calle, número, piso...)", "address")}
+	            <View style={{ flexDirection: 'row', gap: 10, marginBottom: 12 }}>
+	              <View style={{ flex: 1 }}>
+	                <CustomPicker
+	                  options={[{ label: 'Jerez de la Frontera', value: 'Jerez de la Frontera' }]}
+	                  selectedValue={formData.city}
+	                  onValueChange={(v) => setFormData({ ...formData, city: v })}
+	                />
+	              </View>
+	              <View style={{ width: 100 }}>
+	                {renderInput("C.P.", "postalCode", { keyboardType: "numeric", maxLength: 5 })}
+	              </View>
+	            </View>
+	          </View>
+	          <TouchableOpacity onPress={handleRegister} disabled={loading} style={[styles.button, loading && styles.buttonDisabled]}>
+	            {loading ? <ActivityIndicator color="#000" /> : <AntonText style={styles.buttonText}>CREAR CUENTA</AntonText>}
+	          </TouchableOpacity>
+	          <TouchableOpacity onPress={() => router.replace('/(auth)/login')}>
+	            <AntonText style={styles.linkText}>Ya tengo cuenta → Iniciar sesión</AntonText>
+	          </TouchableOpacity>
+	        </ScrollView>
+	      </KeyboardAvoidingView>
+	    </AuthLayout>
+	  );
 }
 
 const styles = StyleSheet.create({
-  title: { fontFamily: 'Anton', fontSize: 32, marginBottom: 24, color: '#000', textAlign: 'center' },
+  title: { fontSize: 32, marginBottom: 24, color: '#000', textAlign: 'center' },
   section: { marginBottom: 20 },
-  sectionLabel: { fontFamily: 'Anton', fontSize: 14, color: colors.primary, marginBottom: 8, textTransform: 'uppercase' },
+  sectionLabel: { fontSize: 14, color: colors.primary, marginBottom: 8, textTransform: 'uppercase' },
   inputGroup: { marginBottom: 12 },
   inputWrapper: { flexDirection: 'row', alignItems: 'center', borderWidth: 2, borderColor: '#EEE', borderRadius: 12, backgroundColor: '#FFF' },
-  input: { flex: 1, fontFamily: 'Anton', paddingHorizontal: 15, paddingVertical: 12, fontSize: 16, color: '#000' },
+  input: { flex: 1, paddingHorizontal: 15, paddingVertical: 12, fontSize: 16, color: '#000' },
   inputError: { borderColor: '#FF4444' },
-  errorText: { color: '#FF4444', fontSize: 12, marginTop: 4, marginLeft: 5, fontFamily: 'Anton' },
-  generalError: { backgroundColor: '#FF4444', color: '#FFF', padding: 12, borderRadius: 12, textAlign: 'center', marginBottom: 20, fontFamily: 'Anton' },
+  errorText: { color: '#FF4444', fontSize: 12, marginTop: 4, marginLeft: 5 },
+  generalError: { backgroundColor: '#FF4444', color: '#FFF', padding: 12, borderRadius: 12, textAlign: 'center', marginBottom: 20 },
   eyeIcon: { paddingHorizontal: 15 },
   button: { backgroundColor: colors.primary, borderRadius: 15, paddingVertical: 16, alignItems: 'center', marginBottom: 20 },
   buttonDisabled: { opacity: 0.7 },
-  buttonText: { fontFamily: 'Anton', fontSize: 18, color: '#000' },
-  linkText: { color: colors.primary, fontFamily: 'Anton', textAlign: 'center', fontSize: 16 },
+  buttonText: { fontSize: 18, color: '#000' },
+  linkText: { color: colors.primary, textAlign: 'center', fontSize: 16 },
 });

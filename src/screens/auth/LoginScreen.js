@@ -1,7 +1,6 @@
 import React, { useState } from 'react';
 import { 
   View, 
-  Text, 
   TextInput, 
   TouchableOpacity, 
   ActivityIndicator, 
@@ -9,6 +8,7 @@ import {
   KeyboardAvoidingView,
   Platform
 } from 'react-native';
+import AntonText from '../../components/ui/AntonText';
 import { Ionicons } from '@expo/vector-icons';
 import { router } from 'expo-router';
 import { signInWithEmailAndPassword } from 'firebase/auth';
@@ -55,13 +55,13 @@ export default function LoginScreen() {
         behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
         style={{ width: '100%' }}
       >
-        <Text style={styles.title}>INICIAR SESIÓN</Text>
+        <AntonText style={styles.title}>INICIAR SESIÓN</AntonText>
 
-        {error ? <Text style={styles.errorText}>{error}</Text> : null}
-        {info ? <Text style={styles.infoText}>{info}</Text> : null}
+        {error ? <AntonText style={styles.errorText}>{error}</AntonText> : null}
+        {info ? <AntonText style={styles.infoText}>{info}</AntonText> : null}
 
         <View style={styles.inputGroup}>
-          <Text style={styles.label}>EMAIL</Text>
+          <AntonText style={styles.label}>EMAIL</AntonText>
           <TextInput
             placeholder="tu@email.com"
             placeholderTextColor="#999"
@@ -74,7 +74,7 @@ export default function LoginScreen() {
         </View>
 
         <View style={styles.inputGroup}>
-          <Text style={styles.label}>CONTRASEÑA</Text>
+          <AntonText style={styles.label}>CONTRASEÑA</AntonText>
           <View style={styles.passwordContainer}>
             <TextInput
               placeholder="••••••••"
@@ -94,9 +94,9 @@ export default function LoginScreen() {
         </View>
 
         <TouchableOpacity onPress={() => router.push('/(auth)/forgot-password')} style={styles.forgotPassword}>
-          <Text style={styles.forgotPasswordText}>
+          <AntonText style={styles.forgotPasswordText}>
             ¿OLVIDASTE TU CONTRASEÑA?
-          </Text>
+          </AntonText>
         </TouchableOpacity>
 
         <TouchableOpacity
@@ -104,13 +104,13 @@ export default function LoginScreen() {
           disabled={loading}
           style={styles.button}
         >
-          {loading ? <ActivityIndicator color="#000" /> : <Text style={styles.buttonText}>ENTRAR</Text>}
+          {loading ? <ActivityIndicator color="#000" /> : <AntonText style={styles.buttonText}>ENTRAR</AntonText>}
         </TouchableOpacity>
 
         <View style={styles.footer}>
-          <Text style={styles.footerText}>¿NO TIENES CUENTA?</Text>
+          <AntonText style={styles.footerText}>¿NO TIENES CUENTA?</AntonText>
           <TouchableOpacity onPress={() => router.push('/(auth)/register')}>
-            <Text style={styles.linkText}>CREAR CUENTA</Text>
+            <AntonText style={styles.linkText}>CREAR CUENTA</AntonText>
           </TouchableOpacity>
         </View>
       </KeyboardAvoidingView>
@@ -120,7 +120,6 @@ export default function LoginScreen() {
 
 const styles = StyleSheet.create({
   title: {
-    fontFamily: 'Anton',
     fontSize: 36,
     color: '#000',
     marginBottom: 30,
@@ -130,14 +129,12 @@ const styles = StyleSheet.create({
     marginBottom: 15,
   },
   label: {
-    fontFamily: 'Anton',
     fontSize: 12,
     color: '#666',
     marginBottom: 6,
     marginLeft: 4,
   },
   input: {
-    fontFamily: 'Anton',
     borderWidth: 2,
     borderColor: '#EEE',
     borderRadius: 12,
@@ -162,7 +159,6 @@ const styles = StyleSheet.create({
     marginBottom: 25,
   },
   forgotPasswordText: {
-    fontFamily: 'Anton',
     color: colors.primary,
     fontSize: 13,
   },
@@ -175,7 +171,6 @@ const styles = StyleSheet.create({
     elevation: 2,
   },
   buttonText: {
-    fontFamily: 'Anton',
     fontSize: 20,
     color: '#000',
   },
@@ -185,24 +180,20 @@ const styles = StyleSheet.create({
     marginBottom: 20,
   },
   footerText: {
-    fontFamily: 'Anton',
     color: '#666',
     fontSize: 14,
   },
   linkText: {
-    fontFamily: 'Anton',
     color: colors.primary,
     marginLeft: 8,
     fontSize: 14,
   },
   errorText: {
-    fontFamily: 'Anton',
     color: '#FF4444',
     marginBottom: 15,
     textAlign: 'center',
   },
   infoText: {
-    fontFamily: 'Anton',
     color: '#4CAF50',
     marginBottom: 15,
     textAlign: 'center',

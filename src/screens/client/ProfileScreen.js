@@ -1,7 +1,6 @@
 import React, { useEffect, useState } from "react";
 import { 
   View, 
-  Text, 
   TextInput, 
   TouchableOpacity, 
   StyleSheet, 
@@ -12,6 +11,7 @@ import {
   Platform,
   Modal
 } from "react-native";
+import AntonText from "../../components/ui/AntonText";
 import { router } from "expo-router";
 import { signOut, deleteUser, reauthenticateWithCredential, EmailAuthProvider, updatePassword, updateEmail } from "firebase/auth";
 import { doc, setDoc, deleteDoc } from "firebase/firestore";
@@ -132,7 +132,7 @@ export default function ProfileScreen() {
 
   const renderInput = (label, field, options = {}) => (
     <View style={[styles.inputGroup, options.containerStyle]}>
-      <Text style={styles.label}>{label}</Text>
+      <AntonText style={styles.label}>{label}</AntonText>
       <View style={[styles.inputWrapper, errors[field] && styles.inputError, options.editable === false && styles.disabledInput]}>
         <TextInput
           value={field === 'email' ? user?.email : formData[field]}
@@ -145,7 +145,7 @@ export default function ProfileScreen() {
           placeholderTextColor="#999"
         />
       </View>
-      {errors[field] && <Text style={styles.errorText}>{errors[field]}</Text>}
+      {errors[field] && <AntonText style={styles.errorText}>{errors[field]}</AntonText>}
     </View>
   );
 
@@ -156,9 +156,9 @@ export default function ProfileScreen() {
   return (
     <KeyboardAvoidingView behavior={Platform.OS === 'ios' ? 'padding' : 'height'} style={styles.container}>
       <ScrollView contentContainerStyle={styles.scrollContent} showsVerticalScrollIndicator={false}>
-        <Text style={styles.title}>MI PERFIL</Text>
+        <AntonText style={styles.title}>MI PERFIL</AntonText>
         
-        {info ? <View style={styles.successBox}><Text style={styles.successText}>{info}</Text></View> : null}
+        {info ? <View style={styles.successBox}><AntonText style={styles.successText}>{info}</AntonText></View> : null}
 
         <View style={styles.formSection}>
           {renderInput("Email", "email", { editable: false })}
@@ -182,7 +182,7 @@ export default function ProfileScreen() {
         </View>
 
         <TouchableOpacity onPress={save} disabled={saving} style={styles.primaryButton}>
-          {saving ? <ActivityIndicator color="#000" /> : <Text style={styles.primaryButtonText}>GUARDAR CAMBIOS</Text>}
+          {saving ? <ActivityIndicator color="#000" /> : <AntonText style={styles.primaryButtonText}>GUARDAR CAMBIOS</AntonText>}
         </TouchableOpacity>
 
         <View style={styles.actionGrid}>
@@ -190,8 +190,8 @@ export default function ProfileScreen() {
             style={styles.actionBtn} 
             onPress={() => { setReauthAction('password'); setReauthVisible(true); }}
           >
-            <Ionicons name="key-outline" size={22} color="#000" />
-            <Text style={styles.actionBtnText}>CAMBIAR CONTRASEÑA</Text>
+	            <Ionicons name="key-outline" size={22} color="#000" />
+	            <AntonText style={styles.actionBtnText}>CAMBIAR CONTRASEÑA</AntonText>
           </TouchableOpacity>
 
           {isStaff && (
@@ -199,28 +199,28 @@ export default function ProfileScreen() {
               style={[styles.actionBtn, { backgroundColor: '#000' }]} 
               onPress={() => router.replace("/(auth)/role-selector")}
             >
-              <Ionicons name="settings-outline" size={22} color={colors.primary} />
-              <Text style={[styles.actionBtnText, { color: colors.primary }]}>PANEL CONTROL</Text>
+	              <Ionicons name="settings-outline" size={22} color={colors.primary} />
+	              <AntonText style={[styles.actionBtnText, { color: colors.primary }]}>PANEL CONTROL</AntonText>
             </TouchableOpacity>
           )}
         </View>
 
         <TouchableOpacity onPress={logout} style={styles.secondaryButton}>
-          <Text style={styles.secondaryButtonText}>CERRAR SESIÓN</Text>
+          <AntonText style={styles.secondaryButtonText}>CERRAR SESIÓN</AntonText>
         </TouchableOpacity>
 
         <TouchableOpacity onPress={() => { setReauthAction('delete'); setReauthVisible(true); }} style={styles.deleteBtn}>
-          <Text style={styles.deleteBtnText}>ELIMINAR MI CUENTA PERMANENTEMENTE</Text>
+          <AntonText style={styles.deleteBtnText}>ELIMINAR MI CUENTA PERMANENTEMENTE</AntonText>
         </TouchableOpacity>
 
         <Modal visible={reauthVisible} transparent animationType="fade">
           <View style={styles.modalOverlay}>
             <View style={styles.modalContent}>
-              <Text style={styles.modalTitle}>
-                {reauthAction === 'delete' ? 'ELIMINAR CUENTA' : 'CONFIRMAR CAMBIOS'}
-              </Text>
+	              <AntonText style={styles.modalTitle}>
+	                {reauthAction === 'delete' ? 'ELIMINAR CUENTA' : 'CONFIRMAR CAMBIOS'}
+	              </AntonText>
               
-              <Text style={styles.modalDesc}>Introduce tu contraseña actual para continuar.</Text>
+              <AntonText style={styles.modalDesc}>Introduce tu contraseña actual para continuar.</AntonText>
               <TextInput
                 style={styles.modalInput}
                 placeholder="Contraseña actual"
@@ -242,12 +242,12 @@ export default function ProfileScreen() {
               )}
 
               <View style={styles.modalButtons}>
-                <TouchableOpacity style={styles.modalCancel} onPress={() => setReauthVisible(false)}>
-                  <Text style={styles.modalCancelText}>CANCELAR</Text>
-                </TouchableOpacity>
-                <TouchableOpacity style={styles.modalConfirm} onPress={handleReauth}>
-                  <Text style={styles.modalConfirmText}>CONFIRMAR</Text>
-                </TouchableOpacity>
+	                <TouchableOpacity style={styles.modalCancel} onPress={() => setReauthVisible(false)}>
+	                  <AntonText style={styles.modalCancelText}>CANCELAR</AntonText>
+	                </TouchableOpacity>
+	                <TouchableOpacity style={styles.modalConfirm} onPress={handleReauth}>
+	                  <AntonText style={styles.modalConfirmText}>CONFIRMAR</AntonText>
+	                </TouchableOpacity>
               </View>
             </View>
           </View>
@@ -261,35 +261,35 @@ const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: "#FFF" },
   scrollContent: { padding: 24, paddingBottom: 60 },
   centered: { flex: 1, justifyContent: "center", alignItems: "center" },
-  title: { fontFamily: "Anton", fontSize: 36, color: "#000", marginBottom: 30, textAlign: "center" },
+  title: { fontSize: 36, color: "#000", marginBottom: 30, textAlign: "center" },
   formSection: { marginBottom: 25 },
   inputGroup: { marginBottom: 18 },
   row: { flexDirection: 'row', gap: 15, alignItems: 'flex-start' },
-  label: { fontFamily: "Anton", fontSize: 13, color: "#333", marginBottom: 8, textTransform: "uppercase" },
+  label: { fontSize: 13, color: "#333", marginBottom: 8, textTransform: "uppercase" },
   inputWrapper: { borderWidth: 2, borderColor: "#EEE", borderRadius: 12, backgroundColor: "#FFF" },
-  input: { fontFamily: "Anton", padding: 14, fontSize: 16, color: "#000" },
+  input: { padding: 14, fontSize: 16, color: "#000" },
   inputError: { borderColor: "#FF4444" },
   disabledInput: { backgroundColor: "#F9F9F9", borderColor: '#EEE' },
-  errorText: { color: "#FF4444", fontSize: 12, marginTop: 4, fontFamily: "Anton" },
+  errorText: { color: "#FF4444", fontSize: 12, marginTop: 4 },
   successBox: { backgroundColor: '#E8F5E9', padding: 15, borderRadius: 12, marginBottom: 20 },
-  successText: { color: '#2E7D32', textAlign: 'center', fontFamily: "Anton" },
+  successText: { color: '#2E7D32', textAlign: 'center' },
   primaryButton: { backgroundColor: colors.primary, borderRadius: 15, padding: 18, alignItems: "center", marginBottom: 15, elevation: 2, shadowColor: '#000', shadowOffset: { width: 0, height: 2 }, shadowOpacity: 0.1, shadowRadius: 4 },
-  primaryButtonText: { fontFamily: "Anton", fontSize: 20, color: "#000" },
+  primaryButtonText: { fontSize: 20, color: "#000" },
   actionGrid: { flexDirection: 'row', gap: 12, marginBottom: 15 },
   actionBtn: { flex: 1, backgroundColor: '#F8F8F8', padding: 15, borderRadius: 15, alignItems: 'center', justifyContent: 'center', gap: 8, borderWidth: 1, borderColor: '#EEE' },
-  actionBtnText: { fontFamily: "Anton", fontSize: 11, textAlign: 'center', color: '#000' },
+  actionBtnText: { fontSize: 11, textAlign: 'center', color: '#000' },
   secondaryButton: { borderWidth: 2, borderColor: colors.primary, borderRadius: 15, padding: 18, alignItems: "center", marginBottom: 40 },
-  secondaryButtonText: { fontFamily: "Anton", fontSize: 18, color: colors.primary },
+  secondaryButtonText: { fontSize: 18, color: colors.primary },
   deleteBtn: { alignSelf: 'center', padding: 10 },
-  deleteBtnText: { fontFamily: "Anton", color: "#FF4444", textDecorationLine: 'underline', fontSize: 13 },
+  deleteBtnText: { color: "#FF4444", textDecorationLine: 'underline', fontSize: 13 },
   modalOverlay: { flex: 1, backgroundColor: 'rgba(0,0,0,0.8)', justifyContent: 'center', padding: 20 },
   modalContent: { backgroundColor: '#FFF', borderRadius: 25, padding: 30 },
-  modalTitle: { fontFamily: "Anton", fontSize: 24, marginBottom: 15, color: '#000' },
+  modalTitle: { fontSize: 24, marginBottom: 15, color: '#000' },
   modalDesc: { fontSize: 14, color: '#666', marginBottom: 20 },
-  modalInput: { borderWidth: 2, borderColor: '#EEE', borderRadius: 12, padding: 15, marginBottom: 15, fontFamily: 'Anton' },
+  modalInput: { borderWidth: 2, borderColor: '#EEE', borderRadius: 12, padding: 15, marginBottom: 15 },
   modalButtons: { flexDirection: 'row', gap: 15, marginTop: 10 },
   modalCancel: { flex: 1, padding: 15, alignItems: 'center' },
-  modalCancelText: { fontFamily: "Anton", color: '#999', fontSize: 16 },
+  modalCancelText: { color: '#999', fontSize: 16 },
   modalConfirm: { flex: 1, backgroundColor: colors.primary, padding: 15, borderRadius: 12, alignItems: 'center' },
-  modalConfirmText: { fontFamily: "Anton", color: '#000', fontSize: 16 }
+  modalConfirmText: { color: '#000', fontSize: 16 }
 });
