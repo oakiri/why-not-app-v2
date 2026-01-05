@@ -15,7 +15,7 @@ const AntonText: React.FC<AntonTextProps> = ({ style, children, ...props }) => {
 
 const styles = StyleSheet.create({
   antonFont: {
-    fontFamily: 'Anton-Regular',
+    fontFamily: 'Anton',
   },
 });
 

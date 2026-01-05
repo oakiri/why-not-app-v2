@@ -8,13 +8,13 @@ import { ThemeProvider } from '../src/context/ThemeContext';
 import AuthGate from '../src/components/auth/AuthGate';
 // import { applyGlobalAntonFont } from '../src/theme/applyGlobalTextStyle'; // Eliminado: Usaremos AntonText.tsx
 // import '../src/theme/global.css'; // Comentado: Posible fuente de conflicto de fuentes
-import '../src/theme/webFonts.css'; // Carga de fuentes para Web
+import '../src/theme/googleFonts.css'; // Carga de fuentes para Web (Google Fonts)
 
 SplashScreen.preventAutoHideAsync().catch(() => {});
 
 export default function RootLayout() {
   const [fontsLoaded, fontError] = useFonts({
-    'Anton-Regular': require('../assets/fonts/custom/Anton-Regular.ttf'),
+    Anton: require('../assets/fonts/custom/Anton-Regular.ttf'),
   });
 
   useEffect(() => {
