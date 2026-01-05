@@ -13,8 +13,8 @@ import {
   Modal
 } from "react-native";
 import { router } from "expo-router";
-import { signOut, deleteUser, reauthenticateWithCredential, EmailAuthProvider } from "firebase/auth";
-import { doc, setDoc, deleteDoc, getDoc } from "firebase/firestore";
+import { signOut, deleteUser, reauthenticateWithCredential, EmailAuthProvider, updatePassword, updateEmail } from "firebase/auth";
+import { doc, setDoc, deleteDoc } from "firebase/firestore";
 import { Ionicons } from '@expo/vector-icons';
 
 import { auth, db } from "../../lib/firebase";
@@ -33,7 +33,10 @@ export default function ProfileScreen() {
   const [errors, setErrors] = useState({});
   const [info, setInfo] = useState("");
   const [reauthVisible, setReauthVisible] = useState(false);
+  const [reauthAction, setReauthAction] = useState(null); // 'delete', 'password', 'email'
   const [password, setPassword] = useState("");
+  const [newPassword, setNewPassword] = useState("");
+  const [newEmail, setNewEmail] = useState("");
 
   const [formData, setFormData] = useState({
     name: '',
@@ -42,7 +45,6 @@ export default function ProfileScreen() {
     city: 'Jerez de la Frontera',
     province: 'Cádiz',
     postalCode: '',
-    role: 'cliente'
   });
 
   useEffect(() => {
@@ -54,7 +56,6 @@ export default function ProfileScreen() {
         city: profile.address?.city || "Jerez de la Frontera",
         province: profile.address?.province || "Cádiz",
         postalCode: profile.address?.postalCode || "",
-        role: profile.role || "cliente"
       });
     }
   }, [profile]);
@@ -78,8 +79,7 @@ export default function ProfileScreen() {
     setSaving(true);
     setErrors({});
     try {
-      const userRef = doc(db, "users", user.uid);
-      await setDoc(userRef, {
+      await setDoc(doc(db, "users", user.uid), {
         name: formData.name.trim(),
         phone: formData.phone.trim(),
         address: {
@@ -94,27 +94,39 @@ export default function ProfileScreen() {
       setInfo("¡Perfil guardado correctamente!");
       setTimeout(() => setInfo(""), 3000);
     } catch (e) {
-      console.error("Error saving profile:", e);
-      setErrors({ general: "Error al guardar. Verifica tu conexión." });
+      setErrors({ general: "Error al guardar los cambios." });
     } finally {
       setSaving(false);
     }
   };
 
-  const confirmDelete = async () => {
+  const handleReauth = async () => {
     if (!password) {
-      Alert.alert("Error", "Introduce tu contraseña.");
+      Alert.alert("Error", "Introduce tu contraseña actual.");
       return;
     }
     try {
       const credential = EmailAuthProvider.credential(user.email, password);
       await reauthenticateWithCredential(auth.currentUser, credential);
-      await deleteDoc(doc(db, "users", user.uid));
-      await deleteUser(auth.currentUser);
+      
+      if (reauthAction === 'delete') {
+        await deleteDoc(doc(db, "users", user.uid));
+        await deleteUser(auth.currentUser);
+        router.replace("/(auth)/login");
+      } else if (reauthAction === 'password') {
+        await updatePassword(auth.currentUser, newPassword);
+        setInfo("Contraseña actualizada.");
+      } else if (reauthAction === 'email') {
+        await updateEmail(auth.currentUser, newEmail);
+        setInfo("Email actualizado.");
+      }
+      
       setReauthVisible(false);
-      router.replace("/(auth)/login");
+      setPassword("");
+      setNewPassword("");
+      setNewEmail("");
     } catch (e) {
-      Alert.alert("Error", "Contraseña incorrecta.");
+      Alert.alert("Error", "Contraseña incorrecta o error en la operación.");
     }
   };
 
@@ -151,7 +163,6 @@ export default function ProfileScreen() {
         </View>
 
         {info ? <View style={styles.successBox}><Text style={styles.successText}>{info}</Text></View> : null}
-        {errors.general ? <View style={styles.errorBox}><Text style={styles.errorText}>{errors.general}</Text></View> : null}
 
         <View style={styles.formSection}>
           {renderInput("Email", "email", { editable: false })}
@@ -172,45 +183,72 @@ export default function ProfileScreen() {
               {renderInput("C.P.", "postalCode", { keyboardType: "numeric", maxLength: 5 })}
             </View>
           </View>
-
-          {isStaff && (
-            <TouchableOpacity style={styles.adminBtn} onPress={() => router.replace("/(auth)/role-selector")}>
-              <Ionicons name="settings" size={20} color="#000" />
-              <Text style={styles.adminBtnText}>IR AL PANEL DE CONTROL</Text>
-            </TouchableOpacity>
-          )}
         </View>
 
         <TouchableOpacity onPress={save} disabled={saving} style={styles.primaryButton}>
           {saving ? <ActivityIndicator color="#000" /> : <Text style={styles.primaryButtonText}>GUARDAR CAMBIOS</Text>}
         </TouchableOpacity>
 
+        <View style={styles.actionGrid}>
+          <TouchableOpacity 
+            style={styles.actionBtn} 
+            onPress={() => { setReauthAction('password'); setReauthVisible(true); }}
+          >
+            <Ionicons name="key-outline" size={20} color="#000" />
+            <Text style={styles.actionBtnText}>CAMBIAR CONTRASEÑA</Text>
+          </TouchableOpacity>
+
+          {isStaff && (
+            <TouchableOpacity 
+              style={[styles.actionBtn, { backgroundColor: '#000' }]} 
+              onPress={() => router.replace("/(auth)/role-selector")}
+            >
+              <Ionicons name="settings-outline" size={20} color={colors.primary} />
+              <Text style={[styles.actionBtnText, { color: colors.primary }]}>PANEL CONTROL</Text>
+            </TouchableOpacity>
+          )}
+        </View>
+
         <TouchableOpacity onPress={logout} style={styles.secondaryButton}>
           <Text style={styles.secondaryButtonText}>CERRAR SESIÓN</Text>
         </TouchableOpacity>
 
-        <TouchableOpacity onPress={() => setReauthVisible(true)} style={styles.deleteBtn}>
+        <TouchableOpacity onPress={() => { setReauthAction('delete'); setReauthVisible(true); }} style={styles.deleteBtn}>
           <Text style={styles.deleteBtnText}>ELIMINAR MI CUENTA PERMANENTEMENTE</Text>
         </TouchableOpacity>
 
         <Modal visible={reauthVisible} transparent animationType="fade">
           <View style={styles.modalOverlay}>
             <View style={styles.modalContent}>
-              <Text style={styles.modalTitle}>CONFIRMAR ELIMINACIÓN</Text>
-              <Text style={styles.modalDesc}>Esta acción borrará todos tus datos. Introduce tu contraseña para confirmar.</Text>
+              <Text style={styles.modalTitle}>
+                {reauthAction === 'delete' ? 'ELIMINAR CUENTA' : 'CONFIRMAR CAMBIOS'}
+              </Text>
+              
+              <Text style={styles.modalDesc}>Introduce tu contraseña actual para continuar.</Text>
               <TextInput
                 style={styles.modalInput}
-                placeholder="Tu contraseña"
+                placeholder="Contraseña actual"
                 secureTextEntry
                 value={password}
                 onChangeText={setPassword}
               />
+
+              {reauthAction === 'password' && (
+                <TextInput
+                  style={styles.modalInput}
+                  placeholder="Nueva contraseña"
+                  secureTextEntry
+                  value={newPassword}
+                  onChangeText={setNewPassword}
+                />
+              )}
+
               <View style={styles.modalButtons}>
                 <TouchableOpacity style={styles.modalCancel} onPress={() => setReauthVisible(false)}>
                   <Text style={styles.modalCancelText}>CANCELAR</Text>
                 </TouchableOpacity>
-                <TouchableOpacity style={styles.modalDelete} onPress={confirmDelete}>
-                  <Text style={styles.modalDeleteText}>ELIMINAR</Text>
+                <TouchableOpacity style={styles.modalConfirm} onPress={handleReauth}>
+                  <Text style={styles.modalConfirmText}>CONFIRMAR</Text>
                 </TouchableOpacity>
               </View>
             </View>
@@ -223,7 +261,7 @@ export default function ProfileScreen() {
 
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: "#FFF" },
-  scrollContent: { padding: 24, paddingBottom: 50 },
+  scrollContent: { padding: 24, paddingBottom: 60 },
   centered: { flex: 1, justifyContent: "center", alignItems: "center" },
   title: { fontFamily: "Anton", fontSize: 36, color: "#000", marginBottom: 10, textAlign: "center" },
   pointsBadge: { backgroundColor: colors.primary, flexDirection: 'row', padding: 12, borderRadius: 25, alignSelf: 'center', alignItems: 'center', marginBottom: 25 },
@@ -238,23 +276,23 @@ const styles = StyleSheet.create({
   errorText: { color: "#FF4444", fontSize: 12, marginTop: 4, fontFamily: "Anton" },
   successBox: { backgroundColor: '#E8F5E9', padding: 15, borderRadius: 12, marginBottom: 20 },
   successText: { color: '#2E7D32', textAlign: 'center', fontFamily: "Anton" },
-  errorBox: { backgroundColor: '#FFEBEE', padding: 15, borderRadius: 12, marginBottom: 20 },
-  primaryButton: { backgroundColor: colors.primary, borderRadius: 15, padding: 18, alignItems: "center", marginBottom: 12, elevation: 2 },
+  primaryButton: { backgroundColor: colors.primary, borderRadius: 15, padding: 18, alignItems: "center", marginBottom: 15 },
   primaryButtonText: { fontFamily: "Anton", fontSize: 20, color: "#000" },
+  actionGrid: { flexDirection: 'row', gap: 10, marginBottom: 15 },
+  actionBtn: { flex: 1, backgroundColor: '#F5F5F5', padding: 15, borderRadius: 12, alignItems: 'center', justifyContent: 'center', gap: 5 },
+  actionBtnText: { fontFamily: "Anton", fontSize: 11, textAlign: 'center' },
   secondaryButton: { borderWidth: 2, borderColor: colors.primary, borderRadius: 15, padding: 18, alignItems: "center", marginBottom: 40 },
   secondaryButtonText: { fontFamily: "Anton", fontSize: 18, color: colors.primary },
-  adminBtn: { flexDirection: 'row', backgroundColor: '#000', padding: 18, borderRadius: 15, alignItems: 'center', justifyContent: 'center', marginTop: 15 },
-  adminBtnText: { fontFamily: "Anton", color: colors.primary, marginLeft: 10, fontSize: 16 },
   deleteBtn: { alignSelf: 'center', padding: 10 },
   deleteBtnText: { fontFamily: "Anton", color: "#FF4444", textDecorationLine: 'underline', fontSize: 13 },
-  modalOverlay: { flex: 1, backgroundColor: 'rgba(0,0,0,0.7)', justifyContent: 'center', padding: 20 },
+  modalOverlay: { flex: 1, backgroundColor: 'rgba(0,0,0,0.8)', justifyContent: 'center', padding: 20 },
   modalContent: { backgroundColor: '#FFF', borderRadius: 25, padding: 30 },
   modalTitle: { fontFamily: "Anton", fontSize: 24, marginBottom: 15, color: '#000' },
-  modalDesc: { fontSize: 15, color: '#666', marginBottom: 25, lineHeight: 20 },
-  modalInput: { borderWidth: 2, borderColor: '#EEE', borderRadius: 12, padding: 15, marginBottom: 25, fontFamily: 'Anton' },
-  modalButtons: { flexDirection: 'row', gap: 15 },
+  modalDesc: { fontSize: 14, color: '#666', marginBottom: 20 },
+  modalInput: { borderWidth: 2, borderColor: '#EEE', borderRadius: 12, padding: 15, marginBottom: 15, fontFamily: 'Anton' },
+  modalButtons: { flexDirection: 'row', gap: 15, marginTop: 10 },
   modalCancel: { flex: 1, padding: 15, alignItems: 'center' },
   modalCancelText: { fontFamily: "Anton", color: '#999', fontSize: 16 },
-  modalDelete: { flex: 1, backgroundColor: '#FF4444', padding: 15, borderRadius: 12, alignItems: 'center' },
-  modalDeleteText: { fontFamily: "Anton", color: '#FFF', fontSize: 16 }
+  modalConfirm: { flex: 1, backgroundColor: colors.primary, padding: 15, borderRadius: 12, alignItems: 'center' },
+  modalConfirmText: { fontFamily: "Anton", color: '#000', fontSize: 16 }
 });
