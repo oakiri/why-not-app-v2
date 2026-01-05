@@ -1,5 +1,5 @@
 import React, { createContext, useContext, useEffect, useMemo, useState } from 'react';
-import { onAuthStateChanged, User } from 'firebase/auth';
+import { onAuthStateChanged, User, signOut } from 'firebase/auth';
 import { doc, getDoc, onSnapshot, setDoc } from 'firebase/firestore';
 
 import { auth, db } from '../lib/firebase';
@@ -17,6 +17,7 @@ export type UserProfile = {
   name?: string;
   phone?: string;
   role?: string;
+  points?: number;
   address?: AddressProfile;
   updatedAt?: unknown;
 };
@@ -28,6 +29,7 @@ type AuthContextType = {
   isVerified: boolean;
   profile: UserProfile | null;
   profileLoading: boolean;
+  logout: () => Promise<void>;
   refreshProfile: () => Promise<void>;
   updateProfile: (data: Partial<UserProfile>) => Promise<void>;
 };
@@ -44,6 +46,16 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [loading, setLoading] = useState(true);
   const [profile, setProfile] = useState<UserProfile | null>(null);
   const [profileLoading, setProfileLoading] = useState(false);
+
+  const logout = async () => {
+    try {
+      await signOut(auth);
+      setUser(null);
+      setProfile(null);
+    } catch (error) {
+      console.error("Error signing out:", error);
+    }
+  };
 
   const refreshProfile = async () => {
     if (!auth.currentUser?.uid) {
@@ -114,6 +126,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       isVerified: !!user?.emailVerified,
       profile,
       profileLoading,
+      logout,
       refreshProfile,
       updateProfile,
     }),
@@ -123,19 +136,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
 }
 
-/**
- * ✅ Hook CANÓNICO (named export)
- */
 export function useAuth() {
   const ctx = useContext(AuthContext);
   if (!ctx) throw new Error('useAuth debe usarse dentro de AuthProvider');
   return ctx;
-}
-
-/**
- * ✅ Para compatibilidad si algo tuyo aún importa default:
- * (puedes borrarlo más adelante si ya no lo usa nadie)
- */
-export default function useAuthContext() {
-  return useAuth();
 }

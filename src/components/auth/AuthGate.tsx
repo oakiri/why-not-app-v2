@@ -1,6 +1,8 @@
 import React, { useEffect, useMemo } from 'react';
 import { Slot, router, useRootNavigationState, useSegments } from 'expo-router';
+import { View, ActivityIndicator } from 'react-native';
 import { useAuth } from '../../context/AuthContext';
+import { colors } from '../../theme/theme';
 
 const AUTH_GROUP = '(auth)';
 const TABS_GROUP = '(tabs)';
@@ -33,7 +35,7 @@ export default function AuthGate({ children }: { children?: React.ReactNode }) {
       return;
     }
 
-    // 2. No verificado
+    // 2. No verificado (Opcional: puedes comentar esto si no quieres forzar verificación ahora)
     if (!user.emailVerified) {
       if (!(inAuth && route === 'verify-email')) {
         router.replace('/(auth)/verify-email');
@@ -46,21 +48,28 @@ export default function AuthGate({ children }: { children?: React.ReactNode }) {
     const isAdmin = ['empleado', 'master', 'admin'].includes(userRole);
 
     if (isAdmin) {
-      // Si es admin y no está en una ruta permitida de admin, forzar selector
-      if (!inBackoffice && !inTabs && route !== 'role-selector') {
+      // Si es admin y está en el login, mandarlo al selector
+      if (inAuth && (route === 'login' || route === 'register')) {
         router.replace('/(auth)/role-selector');
       }
+      // Si intenta entrar a tabs sin pasar por selector (opcional, depende de UX deseada)
+      // if (inTabs && !segments.includes('from-selector')) { ... }
     } else {
-      // Si es cliente y no está en tabs, forzar tabs
-      if (!inTabs) {
+      // Si es cliente e intenta entrar a backoffice o está en auth
+      if (inBackoffice || inAuth) {
         router.replace('/(tabs)/home');
       }
     }
 
   }, [isRouterReady, isReady, user, segments, profile, profileLoading]);
 
-  // Mientras carga o redirige, mostramos un estado neutro para evitar parpadeos
-  if (!isReady || profileLoading) return null;
+  if (!isReady || profileLoading) {
+    return (
+      <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center', backgroundColor: '#fff' }}>
+        <ActivityIndicator size="large" color={colors.primary} />
+      </View>
+    );
+  }
 
   return children ? <>{children}</> : <Slot />;
 }
