@@ -13,7 +13,7 @@ export default function RoleSelectorScreen() {
     <View style={styles.container}>
       <View style={styles.header}>
         <Image 
-          source={require('../../../assets/images/logo.png')} 
+          source={require('../../../assets/logo.png')} 
           style={styles.logo}
           resizeMode="contain"
         />

@@ -1,7 +1,7 @@
-@font-face {
-  font-family: 'Anton';
-  src: url('../../assets/fonts/Anton-Regular.ttf') format('truetype');
-}
+/* 
+  La fuente 'Anton' ya se carga mediante useFonts en _layout.tsx.
+  Este CSS solo fuerza su aplicación global en la versión Web.
+*/
 
 * {
   font-family: 'Anton', sans-serif !important;
@@ -9,4 +9,9 @@
 
 input, textarea, button, select {
   font-family: 'Anton', sans-serif !important;
+}
+
+body {
+  margin: 0;
+  padding: 0;
 }
