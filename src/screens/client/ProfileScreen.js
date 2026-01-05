@@ -169,16 +169,19 @@ export default function ProfileScreen() {
           
           <View style={styles.row}>
             <View style={{ flex: 3 }}>
-              <CustomPicker
-                label="Ciudad"
-                options={[{ label: 'Jerez de la Frontera', value: 'Jerez de la Frontera' }]}
-                selectedValue={formData.city}
-                onValueChange={(v) => setFormData({ ...formData, city: v })}
-              />
+	              <CustomPicker
+	                label="Ciudad"
+	                options={[{ label: 'Jerez de la Frontera', value: 'Jerez de la Frontera' }]}
+	                selectedValue={formData.city}
+	                onValueChange={(v) => setFormData({ ...formData, city: v })}
+	                containerStyle={{ marginBottom: 0 }}
+	              />
             </View>
-            <View style={{ flex: 1 }}>
-              {renderInput("C.P.", "postalCode", { keyboardType: "numeric", maxLength: 5, containerStyle: { marginBottom: 0, marginTop: 25 } })}
-            </View>
+	            <View style={{ flex: 1 }}>
+	              <View style={styles.inputGroup}>
+	                {renderInput("C.P.", "postalCode", { keyboardType: "numeric", maxLength: 5, containerStyle: { marginBottom: 0 } })}
+	              </View>
+	            </View>
           </View>
         </View>
 

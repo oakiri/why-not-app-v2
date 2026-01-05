@@ -1,1 +1,6 @@
 @import url('https://fonts.googleapis.com/css2?family=Anton&display=swap');
+
+/* Forzar la fuente Anton en todos los inputs de texto en la versión Web */
+input[type="text"], input[type="email"], input[type="password"], input[type="tel"], input[type="number"] {
+    font-family: 'Anton', sans-serif !important;
+}
