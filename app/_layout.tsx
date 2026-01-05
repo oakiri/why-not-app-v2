@@ -12,7 +12,7 @@ import AuthGate from '../src/components/auth/AuthGate';
 SplashScreen.preventAutoHideAsync().catch(() => {});
 
 export default function RootLayout() {
-  const [fontsLoaded] = useFonts({
+  const [fontsLoaded, fontError] = useFonts({
     Anton: require('../assets/fonts/Anton-Regular.ttf'),
   });
 
@@ -22,7 +22,15 @@ export default function RootLayout() {
     }
   }, [fontsLoaded]);
 
-  if (!fontsLoaded) return null;
+  // Expo Router will automatically stop the splash screen when the first screen is rendered.
+  // But we manually hide the splash screen in the effect to make sure it is hidden.
+  if (!fontsLoaded && !fontError) return null;
+
+  // Handle font loading error
+  if (fontError) {
+    console.error("Error loading fonts:", fontError);
+    // Optionally, you could render a fallback UI here
+  }
 
   return (
     <ThemeProvider>

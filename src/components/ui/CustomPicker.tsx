@@ -1,13 +1,13 @@
 import React, { useState } from 'react';
 import { 
   View, 
-  Text, 
   TouchableOpacity, 
   Modal, 
   FlatList, 
   StyleSheet, 
   TouchableWithoutFeedback 
 } from 'react-native';
+import AntonText from './AntonText';
 import { Ionicons } from '@expo/vector-icons';
 import { colors } from '../../theme/theme';
 
@@ -43,9 +43,9 @@ export default function CustomPicker({
         onPress={() => setModalVisible(true)}
         activeOpacity={0.7}
       >
-        <Text style={styles.pickerText}>
+        <AntonText style={styles.pickerText}>
           {selectedOption ? selectedOption.label : placeholder}
-        </Text>
+        </AntonText>
         <Ionicons name="chevron-down" size={20} color="#666" />
       </TouchableOpacity>
 
@@ -58,7 +58,7 @@ export default function CustomPicker({
         <TouchableWithoutFeedback onPress={() => setModalVisible(false)}>
           <View style={styles.modalOverlay}>
             <View style={styles.modalContent}>
-              <Text style={styles.modalTitle}>SELECCIONAR</Text>
+              <AntonText style={styles.modalTitle}>SELECCIONAR</AntonText>
               <FlatList
                 data={options}
                 keyExtractor={(item) => item.value}
@@ -73,12 +73,12 @@ export default function CustomPicker({
                       setModalVisible(false);
                     }}
                   >
-                    <Text style={[
+                    <AntonText style={[
                       styles.optionText,
                       item.value === selectedValue && styles.selectedOptionText
                     ]}>
                       {item.label}
-                    </Text>
+                    </AntonText>
                     {item.value === selectedValue && (
                       <Ionicons name="checkmark" size={20} color={colors.primary} />
                     )}
@@ -111,7 +111,6 @@ const styles = StyleSheet.create({
     height: 50,
   },
   pickerText: {
-    fontFamily: 'Anton',
     fontSize: 16,
     color: '#000',
   },
@@ -135,7 +134,6 @@ const styles = StyleSheet.create({
     shadowRadius: 4,
   },
   modalTitle: {
-    fontFamily: 'Anton',
     fontSize: 20,
     color: colors.primary,
     marginBottom: 15,
@@ -155,7 +153,6 @@ const styles = StyleSheet.create({
     paddingHorizontal: 10,
   },
   optionText: {
-    fontFamily: 'Anton',
     fontSize: 18,
     color: '#333',
   },
