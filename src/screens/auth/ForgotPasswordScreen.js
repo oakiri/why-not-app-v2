@@ -99,7 +99,7 @@ const styles = StyleSheet.create({
   logo: { width: 120, height: 120, marginBottom: 20 },
   title: { fontSize: 28, color: '#000', marginBottom: 15, textAlign: 'center' },
   description: { fontSize: 14, color: '#666', textAlign: 'center', lineHeight: 20, marginBottom: 30 },
-  input: { width: '100%', backgroundColor: '#F8F8F8', borderWidth: 1, borderColor: '#EEE', borderRadius: 12, padding: 15, fontSize: 16, marginBottom: 20, color: '#000' },
+  input: { width: '100%', backgroundColor: '#F8F8F8', borderWidth: 1, borderColor: '#EEE', borderRadius: 12, padding: 15, fontSize: 16, marginBottom: 20, color: '#000', fontFamily: 'Anton' },
   button: { backgroundColor: colors.primary, width: '100%', padding: 18, borderRadius: 15, alignItems: 'center', elevation: 3 },
   buttonText: { fontSize: 18, color: '#000' },
 });

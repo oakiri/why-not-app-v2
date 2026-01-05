@@ -39,7 +39,7 @@ export default function LoginScreen() {
       const { user } = await signInWithEmailAndPassword(auth, email.trim(), password);
 
       if (!user.emailVerified) {
-        router.replace('/(auth)/verify-email');
+        router.replace('/verify-email');
         return;
       }
     } catch (e) {
@@ -93,7 +93,7 @@ export default function LoginScreen() {
           </View>
         </View>
 
-        <TouchableOpacity onPress={() => router.push('/(auth)/forgot-password')} style={styles.forgotPassword}>
+        <TouchableOpacity onPress={() => router.push('/forgot-password')} style={styles.forgotPassword}>
           <AntonText style={styles.forgotPasswordText}>
             ¿OLVIDASTE TU CONTRASEÑA?
           </AntonText>
@@ -109,7 +109,7 @@ export default function LoginScreen() {
 
         <View style={styles.footer}>
           <AntonText style={styles.footerText}>¿NO TIENES CUENTA?</AntonText>
-          <TouchableOpacity onPress={() => router.push('/(auth)/register')}>
+          <TouchableOpacity onPress={() => router.push('/register')}>
             <AntonText style={styles.linkText}>CREAR CUENTA</AntonText>
           </TouchableOpacity>
         </View>
@@ -143,6 +143,7 @@ const styles = StyleSheet.create({
     fontSize: 16,
     color: '#000',
     backgroundColor: '#FFF',
+    fontFamily: 'Anton',
   },
   passwordContainer: {
     flexDirection: 'row',

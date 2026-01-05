@@ -85,7 +85,7 @@ export default function RegisterScreen() {
         createdAt: serverTimestamp(),
         updatedAt: serverTimestamp(),
       });
-      router.replace('/(auth)/verify-email');
+      router.replace('/verify-email');
     } catch (e) {
       console.error(e);
       setErrors({ general: mapAuthErrorMessage(e) });
@@ -144,23 +144,23 @@ export default function RegisterScreen() {
 	          <View style={styles.section}>
 	            <AntonText style={styles.sectionLabel}>Dirección de entrega</AntonText>
 	            {renderInput("Dirección (Calle, número, piso...)", "address")}
-	            <View style={{ flexDirection: 'row', gap: 10, marginBottom: 12 }}>
-	              <View style={{ flex: 1 }}>
-	                <CustomPicker
-	                  options={[{ label: 'Jerez de la Frontera', value: 'Jerez de la Frontera' }]}
-	                  selectedValue={formData.city}
-	                  onValueChange={(v) => setFormData({ ...formData, city: v })}
-	                />
-	              </View>
-	              <View style={{ width: 100 }}>
-	                {renderInput("C.P.", "postalCode", { keyboardType: "numeric", maxLength: 5 })}
-	              </View>
-	            </View>
+		            <View style={{ flexDirection: 'row', gap: 10, marginBottom: 12 }}>
+		              <View style={{ flex: 3 }}>
+		                <CustomPicker
+		                  options={[{ label: 'Jerez de la Frontera', value: 'Jerez de la Frontera' }]}
+		                  selectedValue={formData.city}
+		                  onValueChange={(v) => setFormData({ ...formData, city: v })}
+		                />
+		              </View>
+		              <View style={{ flex: 1 }}>
+		                {renderInput("C.P.", "postalCode", { keyboardType: "numeric", maxLength: 5 })}
+		              </View>
+		            </View>
 	          </View>
 	          <TouchableOpacity onPress={handleRegister} disabled={loading} style={[styles.button, loading && styles.buttonDisabled]}>
 	            {loading ? <ActivityIndicator color="#000" /> : <AntonText style={styles.buttonText}>CREAR CUENTA</AntonText>}
 	          </TouchableOpacity>
-	          <TouchableOpacity onPress={() => router.replace('/(auth)/login')}>
+	          <TouchableOpacity onPress={() => router.replace('/login')}>
 	            <AntonText style={styles.linkText}>Ya tengo cuenta → Iniciar sesión</AntonText>
 	          </TouchableOpacity>
 	        </ScrollView>
@@ -175,7 +175,7 @@ const styles = StyleSheet.create({
   sectionLabel: { fontSize: 14, color: colors.primary, marginBottom: 8, textTransform: 'uppercase' },
   inputGroup: { marginBottom: 12 },
   inputWrapper: { flexDirection: 'row', alignItems: 'center', borderWidth: 2, borderColor: '#EEE', borderRadius: 12, backgroundColor: '#FFF' },
-  input: { flex: 1, paddingHorizontal: 15, paddingVertical: 12, fontSize: 16, color: '#000' },
+  input: { flex: 1, paddingHorizontal: 15, paddingVertical: 12, fontSize: 16, color: '#000', fontFamily: 'Anton' },
   inputError: { borderColor: '#FF4444' },
   errorText: { color: '#FF4444', fontSize: 12, marginTop: 4, marginLeft: 5 },
   generalError: { backgroundColor: '#FF4444', color: '#FFF', padding: 12, borderRadius: 12, textAlign: 'center', marginBottom: 20 },

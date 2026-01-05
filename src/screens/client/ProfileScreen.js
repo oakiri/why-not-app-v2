@@ -113,7 +113,7 @@ export default function ProfileScreen() {
       if (reauthAction === 'delete') {
         await deleteDoc(doc(db, "users", user.uid));
         await deleteUser(auth.currentUser);
-        router.replace("/(auth)/login");
+        router.replace("/login");
       } else if (reauthAction === 'password') {
         await updatePassword(auth.currentUser, newPassword);
         setInfo("Contraseña actualizada.");
@@ -168,7 +168,7 @@ export default function ProfileScreen() {
           {renderInput("Dirección", "address")}
           
           <View style={styles.row}>
-            <View style={{ flex: 1.5 }}>
+            <View style={{ flex: 3 }}>
               <CustomPicker
                 label="Ciudad"
                 options={[{ label: 'Jerez de la Frontera', value: 'Jerez de la Frontera' }]}
@@ -177,7 +177,7 @@ export default function ProfileScreen() {
               />
             </View>
             <View style={{ flex: 1 }}>
-              {renderInput("C.P.", "postalCode", { keyboardType: "numeric", maxLength: 5 })}
+              {renderInput("C.P.", "postalCode", { keyboardType: "numeric", maxLength: 5, containerStyle: { marginBottom: 0 } })}
             </View>
           </View>
         </View>
@@ -198,7 +198,7 @@ export default function ProfileScreen() {
           {isStaff && (
             <TouchableOpacity 
               style={[styles.actionBtn, { backgroundColor: '#000' }]} 
-              onPress={() => router.replace("/(auth)/role-selector")}
+              onPress={() => router.replace("/role-selector")}
             >
 	              <Ionicons name="settings-outline" size={22} color={colors.primary} />
 	              <AntonText style={[styles.actionBtnText, { color: colors.primary }]}>PANEL CONTROL</AntonText>
@@ -268,7 +268,7 @@ const styles = StyleSheet.create({
   row: { flexDirection: 'row', gap: 15, alignItems: 'flex-start' },
   label: { fontSize: 13, color: "#333", marginBottom: 8, textTransform: "uppercase" },
   inputWrapper: { borderWidth: 2, borderColor: "#EEE", borderRadius: 12, backgroundColor: "#FFF" },
-  input: { padding: 14, fontSize: 16, color: "#000" },
+  input: { padding: 14, fontSize: 16, color: "#000", fontFamily: "Anton" },
   inputError: { borderColor: "#FF4444" },
   disabledInput: { backgroundColor: "#F9F9F9", borderColor: '#EEE' },
   errorText: { color: "#FF4444", fontSize: 12, marginTop: 4 },
@@ -287,7 +287,7 @@ const styles = StyleSheet.create({
   modalContent: { backgroundColor: '#FFF', borderRadius: 25, padding: 30 },
   modalTitle: { fontSize: 24, marginBottom: 15, color: '#000' },
   modalDesc: { fontSize: 14, color: '#666', marginBottom: 20 },
-  modalInput: { borderWidth: 2, borderColor: '#EEE', borderRadius: 12, padding: 15, marginBottom: 15 },
+  modalInput: { borderWidth: 2, borderColor: '#EEE', borderRadius: 12, padding: 15, marginBottom: 15, fontFamily: 'Anton' },
   modalButtons: { flexDirection: 'row', gap: 15, marginTop: 10 },
   modalCancel: { flex: 1, padding: 15, alignItems: 'center' },
   modalCancelText: { color: '#999', fontSize: 16 },
