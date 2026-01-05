@@ -170,7 +170,7 @@ export default function ProfileScreen() {
           <View style={styles.row}>
             <View style={{ flex: 3 }}>
 	              <CustomPicker
-	                label="Ciudad"
+	                label=""
 	                options={[{ label: 'Jerez de la Frontera', value: 'Jerez de la Frontera' }]}
 	                selectedValue={formData.city}
 	                onValueChange={(v) => setFormData({ ...formData, city: v })}
