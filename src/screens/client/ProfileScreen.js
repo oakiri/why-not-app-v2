@@ -131,7 +131,7 @@ export default function ProfileScreen() {
   };
 
   const renderInput = (label, field, options = {}) => (
-    <View style={styles.inputGroup}>
+    <View style={[styles.inputGroup, options.containerStyle]}>
       <Text style={styles.label}>{label}</Text>
       <View style={[styles.inputWrapper, errors[field] && styles.inputError, options.editable === false && styles.disabledInput]}>
         <TextInput
@@ -142,6 +142,7 @@ export default function ProfileScreen() {
           maxLength={options.maxLength}
           style={styles.input}
           placeholder={options.placeholder}
+          placeholderTextColor="#999"
         />
       </View>
       {errors[field] && <Text style={styles.errorText}>{errors[field]}</Text>}
@@ -154,7 +155,7 @@ export default function ProfileScreen() {
 
   return (
     <KeyboardAvoidingView behavior={Platform.OS === 'ios' ? 'padding' : 'height'} style={styles.container}>
-      <ScrollView contentContainerStyle={styles.scrollContent}>
+      <ScrollView contentContainerStyle={styles.scrollContent} showsVerticalScrollIndicator={false}>
         <Text style={styles.title}>MI PERFIL</Text>
         
         {info ? <View style={styles.successBox}><Text style={styles.successText}>{info}</Text></View> : null}
@@ -165,8 +166,8 @@ export default function ProfileScreen() {
           {renderInput("Teléfono", "phone", { keyboardType: "phone-pad", maxLength: 9 })}
           {renderInput("Dirección", "address")}
           
-          <View style={{ flexDirection: 'row', gap: 10 }}>
-            <View style={{ flex: 1 }}>
+          <View style={styles.row}>
+            <View style={{ flex: 1.5 }}>
               <CustomPicker
                 label="Ciudad"
                 options={[{ label: 'Jerez de la Frontera', value: 'Jerez de la Frontera' }]}
@@ -174,7 +175,7 @@ export default function ProfileScreen() {
                 onValueChange={(v) => setFormData({ ...formData, city: v })}
               />
             </View>
-            <View style={{ width: 100 }}>
+            <View style={{ flex: 1 }}>
               {renderInput("C.P.", "postalCode", { keyboardType: "numeric", maxLength: 5 })}
             </View>
           </View>
@@ -189,7 +190,7 @@ export default function ProfileScreen() {
             style={styles.actionBtn} 
             onPress={() => { setReauthAction('password'); setReauthVisible(true); }}
           >
-            <Ionicons name="key-outline" size={24} color="#000" />
+            <Ionicons name="key-outline" size={22} color="#000" />
             <Text style={styles.actionBtnText}>CAMBIAR CONTRASEÑA</Text>
           </TouchableOpacity>
 
@@ -198,7 +199,7 @@ export default function ProfileScreen() {
               style={[styles.actionBtn, { backgroundColor: '#000' }]} 
               onPress={() => router.replace("/(auth)/role-selector")}
             >
-              <Ionicons name="settings-outline" size={24} color={colors.primary} />
+              <Ionicons name="settings-outline" size={22} color={colors.primary} />
               <Text style={[styles.actionBtnText, { color: colors.primary }]}>PANEL CONTROL</Text>
             </TouchableOpacity>
           )}
@@ -226,6 +227,7 @@ export default function ProfileScreen() {
                 secureTextEntry
                 value={password}
                 onChangeText={setPassword}
+                placeholderTextColor="#999"
               />
 
               {reauthAction === 'password' && (
@@ -235,6 +237,7 @@ export default function ProfileScreen() {
                   secureTextEntry
                   value={newPassword}
                   onChangeText={setNewPassword}
+                  placeholderTextColor="#999"
                 />
               )}
 
@@ -259,9 +262,10 @@ const styles = StyleSheet.create({
   scrollContent: { padding: 24, paddingBottom: 60 },
   centered: { flex: 1, justifyContent: "center", alignItems: "center" },
   title: { fontFamily: "Anton", fontSize: 36, color: "#000", marginBottom: 30, textAlign: "center" },
-  formSection: { marginBottom: 20 },
-  inputGroup: { marginBottom: 15 },
-  label: { fontFamily: "Anton", fontSize: 13, color: "#333", marginBottom: 6, textTransform: "uppercase" },
+  formSection: { marginBottom: 25 },
+  inputGroup: { marginBottom: 18 },
+  row: { flexDirection: 'row', gap: 15, alignItems: 'flex-start' },
+  label: { fontFamily: "Anton", fontSize: 13, color: "#333", marginBottom: 8, textTransform: "uppercase" },
   inputWrapper: { borderWidth: 2, borderColor: "#EEE", borderRadius: 12, backgroundColor: "#FFF" },
   input: { fontFamily: "Anton", padding: 14, fontSize: 16, color: "#000" },
   inputError: { borderColor: "#FF4444" },
@@ -269,11 +273,11 @@ const styles = StyleSheet.create({
   errorText: { color: "#FF4444", fontSize: 12, marginTop: 4, fontFamily: "Anton" },
   successBox: { backgroundColor: '#E8F5E9', padding: 15, borderRadius: 12, marginBottom: 20 },
   successText: { color: '#2E7D32', textAlign: 'center', fontFamily: "Anton" },
-  primaryButton: { backgroundColor: colors.primary, borderRadius: 15, padding: 18, alignItems: "center", marginBottom: 15 },
+  primaryButton: { backgroundColor: colors.primary, borderRadius: 15, padding: 18, alignItems: "center", marginBottom: 15, elevation: 2, shadowColor: '#000', shadowOffset: { width: 0, height: 2 }, shadowOpacity: 0.1, shadowRadius: 4 },
   primaryButtonText: { fontFamily: "Anton", fontSize: 20, color: "#000" },
-  actionGrid: { flexDirection: 'row', gap: 10, marginBottom: 15 },
-  actionBtn: { flex: 1, backgroundColor: '#F5F5F5', padding: 15, borderRadius: 12, alignItems: 'center', justifyContent: 'center', gap: 5 },
-  actionBtnText: { fontFamily: "Anton", fontSize: 11, textAlign: 'center' },
+  actionGrid: { flexDirection: 'row', gap: 12, marginBottom: 15 },
+  actionBtn: { flex: 1, backgroundColor: '#F8F8F8', padding: 15, borderRadius: 15, alignItems: 'center', justifyContent: 'center', gap: 8, borderWidth: 1, borderColor: '#EEE' },
+  actionBtnText: { fontFamily: "Anton", fontSize: 11, textAlign: 'center', color: '#000' },
   secondaryButton: { borderWidth: 2, borderColor: colors.primary, borderRadius: 15, padding: 18, alignItems: "center", marginBottom: 40 },
   secondaryButtonText: { fontFamily: "Anton", fontSize: 18, color: colors.primary },
   deleteBtn: { alignSelf: 'center', padding: 10 },
