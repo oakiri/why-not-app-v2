@@ -177,7 +177,7 @@ export default function ProfileScreen() {
               />
             </View>
             <View style={{ flex: 1 }}>
-              {renderInput("C.P.", "postalCode", { keyboardType: "numeric", maxLength: 5, containerStyle: { marginBottom: 0 } })}
+              {renderInput("C.P.", "postalCode", { keyboardType: "numeric", maxLength: 5, containerStyle: { marginBottom: 0, marginTop: 25 } })}
             </View>
           </View>
         </View>
