@@ -5,6 +5,7 @@
     "version": "1.0.0",
     "orientation": "portrait",
     "icon": "./assets/images/icon.png",
+    "assetBundlePatterns": ["**/*", "assets/fonts/custom/*"],
     "splash": {
       "image": "./assets/logo.png",
       "resizeMode": "contain",
